@@ -4560,6 +4560,15 @@ document.addEventListener('DOMContentLoaded',()=>boot().catch(err=>{console.erro
 
 </script>
 
-
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./service-worker.js')
+      .then(() => console.log('Kid Journal Service Worker registered'))
+      .catch(error => console.error('Service Worker registration failed:', error));
+  });
+}
+</script>
+    
 </body>
 </html>
