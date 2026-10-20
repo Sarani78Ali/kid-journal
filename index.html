@@ -1,0 +1,1210 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="theme-color" content="#101318">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ژورنال ترید</title>
+    <link rel="manifest" href="manifest.json" />
+    <meta name="theme-color" content="#111318" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="ژورنال ترید" />
+    <link rel="icon" type="image/png" href="logo-192.png" />
+    <link rel="apple-touch-icon" href="logo-192.png" />
+<style>
+:root{
+  /* Material 3 dark — token names kept so the JS keeps working */
+  --bg:#101318; --s1:#1a1d23; --s2:#232730; --s3:#2d323c; --line:#3a3f4b; --ink:#e3e6ee; --mute:#9aa2b1;
+  --gold:#a8c7fa; --on-gold:#08305f; --pc:#2b4a78; --on-pc:#d7e4ff;
+  --win:#45c8a3; --loss:#f0707a; --be:#9aa4b2;
+  --win-c:#143a30; --loss-c:#4a1f24;
+  --e1:0 1px 2px rgba(0,0,0,.5),0 1px 3px 1px rgba(0,0,0,.25);
+  --e2:0 1px 2px rgba(0,0,0,.5),0 2px 6px 2px rgba(0,0,0,.28);
+  --e3:0 4px 8px 3px rgba(0,0,0,.32),0 1px 3px rgba(0,0,0,.5);
+}
+*{box-sizing:border-box;margin:0}
+html{color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font:15px/1.65 "Vazirmatn","Vazir","IRANSansX","Segoe UI",Tahoma,sans-serif;-webkit-text-size-adjust:100%}
+body.lock{overflow:hidden}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;-webkit-tap-highlight-color:transparent}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.num{font-variant-numeric:tabular-nums;unicode-bidi:isolate;white-space:nowrap}
+.pos{color:var(--win)}.neg{color:var(--loss)}.zero{color:var(--mute)}
+.mute{color:var(--mute)}.grow{flex:1}.pad{padding:10px 0}
+h2{font-size:1.1rem;font-weight:700;margin:0 0 14px;display:flex;align-items:center;gap:8px}
+h3{font-size:1rem;font-weight:700;margin:18px 0 8px}
+h4{font-size:.85rem;font-weight:600;color:var(--mute);margin:14px 0 8px}
+.count{font-size:.78rem;color:var(--mute);font-weight:500}
+
+/* ---------- top app bar ---------- */
+.top{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:16px;padding:10px 20px;background:rgba(16,19,24,.92);backdrop-filter:blur(14px);box-shadow:0 1px 0 var(--line)}
+.top h1{font-size:1.1rem;font-weight:700;color:var(--ink)}
+.tabs{display:flex;gap:6px;flex:1}
+.tab{background:transparent;border:0;padding:0 18px;min-height:40px;border-radius:999px;color:var(--mute);font-weight:600;transition:background .15s,color .15s}
+.tab:hover{background:rgba(227,230,238,.08)}
+.tab.on{background:var(--pc);color:var(--on-pc)}
+.icon{width:44px;height:44px;border-radius:50%;border:0;background:transparent;color:var(--mute);font-size:1.15rem;display:inline-grid;place-items:center;transition:background .15s}
+.icon:hover{background:rgba(227,230,238,.10);color:var(--ink)}
+.icon.sm{width:36px;height:36px;font-size:.9rem}
+main{max-width:1000px;margin:0 auto;padding:22px 20px 96px}
+section{margin-bottom:30px}
+
+/* ---------- buttons: fully rounded ---------- */
+.btn{min-height:44px;padding:0 22px;border-radius:999px;border:0;background:var(--s3);color:var(--ink);font-weight:600;letter-spacing:.1px;display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:background .15s,box-shadow .15s,transform .1s}
+.btn:hover{background:#383e4a}
+.btn:active{transform:scale(.98)}
+.btn.primary{background:var(--gold);color:var(--on-gold);font-weight:700;box-shadow:var(--e1)}
+.btn.primary:hover{background:#b9d2fb;box-shadow:var(--e2)}
+.btn.ghost{background:transparent;border:1px solid var(--line);color:var(--gold)}
+.btn.ghost:hover{background:rgba(168,199,250,.10)}
+.btn.danger{background:transparent;border:1px solid rgba(240,112,122,.45);color:var(--loss)}
+.btn.danger:hover{background:rgba(240,112,122,.10)}
+.btn.big{min-height:52px;font-size:1rem;padding:0 28px}
+.btn.small{min-height:36px;padding:0 16px;font-size:.82rem}
+.btn:disabled{opacity:.38;cursor:not-allowed;box-shadow:none}
+.bar{margin-bottom:22px}
+
+/* ---------- ticket cards (open trades) ---------- */
+.tickets{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:14px}
+.ticket{position:relative;overflow:hidden;background:var(--s1);border-radius:24px;box-shadow:var(--e1);padding:18px 20px 16px;display:flex;flex-direction:column;gap:14px;transition:box-shadow .18s,background .18s}
+.ticket::before{content:"";position:absolute;top:0;bottom:0;right:0;width:6px;background:var(--be)}
+.ticket.buy::before{background:var(--win)}
+.ticket.sell::before{background:var(--loss)}
+.ticket:hover{box-shadow:var(--e2);background:#1e2128}
+.tk-head{display:flex;align-items:center;gap:10px;cursor:pointer}
+.sym{font-size:1.15rem;font-weight:700;letter-spacing:.3px;font-family:"Segoe UI",Tahoma,sans-serif}
+.dir{font-size:.78rem;font-weight:700;padding:3px 12px;border-radius:999px;background:var(--s3)}
+.dir.buy,.ticket.buy .dir{color:var(--win);background:var(--win-c)}
+.dir.sell,.ticket.sell .dir{color:var(--loss);background:var(--loss-c)}
+.ents{display:flex;flex-wrap:wrap;gap:8px;min-height:32px;align-items:center}
+.ent{background:var(--s3);border:0;border-radius:999px;padding:3px 13px;font-size:.8rem;display:inline-flex;gap:8px;align-items:center}
+.ent.live{background:transparent;border:1px dashed var(--gold);color:var(--gold)}
+.ent.win{background:var(--win-c)}.ent.loss{background:var(--loss-c)}
+.tk-foot{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.tk-foot time{font-size:.78rem;color:var(--mute);margin-inline-start:auto}
+.ring{--p:0;width:36px;height:36px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(var(--gold) calc(var(--p)*1%),var(--s3) 0);flex:none}
+.ring i{font-style:normal;width:28px;height:28px;border-radius:50%;background:var(--s1);display:grid;place-items:center;font-size:.66rem;font-weight:700;font-variant-numeric:tabular-nums}
+.empty{border:2px dashed var(--line);border-radius:24px;padding:30px;text-align:center;color:var(--mute)}
+.empty .btn{margin-top:14px}
+
+/* ---------- history ---------- */
+.tools{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;padding:10px;background:var(--s1);border-radius:999px;box-shadow:var(--e1)}
+.tools input{flex:1;min-width:160px}
+input,select,textarea{background:var(--s2);border:1px solid transparent;border-radius:14px;min-height:46px;padding:6px 16px;width:100%;transition:border-color .15s,box-shadow .15s}
+.tools input,.tools select{border-radius:999px;background:var(--s3)}
+.tools select{width:auto}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 1px var(--gold)}
+.dayh{display:flex;justify-content:space-between;font-size:.82rem;font-weight:600;color:var(--mute);padding:18px 10px 8px}
+.row{display:flex;align-items:center;gap:12px;padding:12px 16px;margin-bottom:8px;background:var(--s1);border-radius:18px;box-shadow:var(--e1);cursor:pointer;flex-wrap:wrap;transition:background .15s,box-shadow .15s}
+.row:hover{background:#1f232b;box-shadow:var(--e2)}
+.rb{width:5px;align-self:stretch;border-radius:3px;background:var(--be)}
+.rb.win{background:var(--win)}.rb.loss{background:var(--loss)}
+.meta{font-size:.78rem;color:var(--mute)}
+.rv{font-weight:700;min-width:72px;text-align:end}
+.pv{min-width:70px;text-align:end;color:var(--mute);font-size:.85rem}
+.row time{font-size:.78rem;color:var(--mute);min-width:40px;text-align:end}
+
+/* ---------- dialogs ---------- */
+.modal{position:fixed;inset:0;z-index:100;background:rgba(3,5,9,.66);backdrop-filter:blur(3px);display:none;align-items:center;justify-content:center;padding:20px}
+.modal.open{display:flex}
+.sheet{background:var(--s1);border:0;border-radius:28px;width:100%;max-width:640px;max-height:92vh;display:flex;flex-direction:column;box-shadow:var(--e3)}
+.sheet.wide{max-width:780px}
+.sheet-head{display:flex;align-items:center;gap:10px;padding:18px 22px 10px}
+.sheet-head h3{margin:0;flex:1;font-size:1.2rem;font-weight:600}
+.sheet-body{padding:4px 22px 20px;overflow-y:auto;overscroll-behavior:contain}
+.sheet-foot{display:flex;gap:10px;padding:14px 22px 18px;background:var(--s1);border-radius:0 0 28px 28px;box-shadow:0 -1px 0 var(--line)}
+.sheet-foot .btn{flex:1}
+.sheet-foot .btn.primary{flex:2}
+.fld{margin-top:18px}
+.fld>label,.lbl{display:flex;align-items:center;gap:8px;font-size:.82rem;font-weight:600;color:var(--mute);margin-bottom:8px}
+.lbl .grow{height:4px;background:var(--s3);border-radius:2px;overflow:hidden;max-width:120px;margin-inline-start:auto}
+.lbl .grow i{display:block;height:100%;background:var(--gold);width:0;transition:width .2s}
+.inline{display:flex;gap:10px;align-items:center}
+.inline select{width:auto;min-width:84px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{min-height:38px;padding:0 16px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--mute);transition:all .12s}
+.chip:hover{background:rgba(227,230,238,.06)}
+.chip.on{background:var(--pc);border-color:transparent;color:var(--on-pc)}
+.chips.sm .chip{min-height:32px;font-size:.82rem;padding:0 13px}
+.seg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:8px}
+.opt{min-height:50px;border-radius:999px;border:1px solid var(--line);background:transparent;font-weight:600;color:var(--mute);transition:all .12s}
+.opt:hover{background:rgba(227,230,238,.06)}
+.opt.on{color:var(--on-pc);border-color:transparent;background:var(--pc)}
+.opt.buy.on,.opt.bull.on{background:var(--win-c);color:var(--win)}
+.opt.sell.on,.opt.bear.on{background:var(--loss-c);color:var(--loss)}
+.sub{font-size:.78rem;color:var(--mute);margin:12px 0 6px}
+.quick{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.q{min-height:36px;min-width:52px;padding:0 14px;border-radius:999px;border:0;background:var(--s3);font-size:.85rem;font-variant-numeric:tabular-nums}
+.q:hover{background:#383e4a}
+.q{direction:ltr;unicode-bidi:isolate}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.rbox{border:0;border-radius:22px;padding:16px;margin-top:14px;background:var(--s2)}
+.rbox>.rh{display:flex;gap:8px;align-items:center;font-weight:600;margin-bottom:10px}
+.rinput{font-size:1.6rem;font-weight:700;text-align:center;direction:ltr;min-height:60px;background:var(--s3)}
+.pctline{text-align:center;color:var(--mute);font-size:.85rem;margin-top:8px}
+details.more summary{cursor:pointer;color:var(--mute);font-size:.85rem;padding:8px 0}
+textarea{min-height:80px;resize:vertical;border-radius:18px}
+
+/* ---------- trade detail ---------- */
+.sumbar{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:14px 0}
+.sumbar div{background:var(--s2);border-radius:18px;padding:12px 14px}
+.sumbar small{display:block;color:var(--mute);font-size:.72rem}
+.sumbar b{font-size:1.1rem}
+.tags{display:flex;flex-wrap:wrap;gap:6px}
+.tag{background:var(--s3);border:0;border-radius:999px;padding:3px 12px;font-size:.78rem}
+.dsec{padding:14px 16px;margin-top:10px;background:var(--s2);border-radius:20px}
+.dsec:last-child{border:0}
+.dsec h5{font-size:.82rem;font-weight:600;color:var(--gold);margin-bottom:8px}
+.kv{display:flex;flex-wrap:wrap;gap:4px 18px;font-size:.88rem;margin-bottom:6px}
+.kv span span{color:var(--mute)}
+.ebox{border:0;border-radius:16px;padding:12px 14px;margin-top:8px;background:var(--s3)}
+.ebox .acts{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
+
+/* ---------- settings ---------- */
+.stabs{display:flex;gap:6px;margin-top:8px}
+.stabs button{background:transparent;border:0;padding:0 16px;min-height:38px;border-radius:999px;color:var(--mute);font-weight:600}
+.stabs button.on{background:var(--pc);color:var(--on-pc)}
+.pane{display:none}.pane.on{display:block}
+.li{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.li input{flex:1}
+.li.off input{opacity:.45}
+.sw{width:52px;height:32px;border-radius:999px;border:2px solid var(--mute);background:var(--s3);position:relative;flex:none;padding:0;transition:background .15s,border-color .15s}
+.sw i{position:absolute;top:50%;transform:translateY(-50%);inset-inline-start:6px;width:14px;height:14px;border-radius:50%;background:var(--mute);transition:all .15s}
+.sw.on{background:var(--gold);border-color:var(--gold)}
+.sw.on i{inset-inline-start:24px;width:20px;height:20px;background:var(--on-gold)}
+.ed{margin-top:8px}
+.dbtns{display:flex;flex-direction:column;gap:10px;margin-top:14px}
+
+/* ---------- report ---------- */
+.rfilters{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px;align-items:center}
+.rfilters select{width:auto;border-radius:999px;background:var(--s3)}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.kpi{background:var(--s1);border-radius:20px;box-shadow:var(--e1);padding:14px 16px}
+.kpi small{display:block;color:var(--mute);font-size:.74rem;margin-bottom:2px}
+.kpi b{font-size:1.28rem;font-weight:700}
+.kpi.main{background:var(--pc)}
+.kpi.main small{color:var(--on-pc);opacity:.8}
+.kpi.main b{font-size:1.6rem}
+details.sec{background:var(--s1);border-radius:28px;box-shadow:var(--e1);margin-top:16px;padding:6px 20px 18px}
+details.sec>summary{cursor:pointer;font-weight:700;font-size:1.05rem;padding:12px 0;list-style:none;display:flex;gap:8px;align-items:center}
+details.sec>summary::-webkit-details-marker{display:none}
+details.sec>summary::before{content:"▾";color:var(--gold);font-size:.9rem;transition:transform .15s}
+details.sec:not([open])>summary::before{transform:rotate(90deg)}
+.hint{font-size:.8rem;color:var(--mute);margin:-2px 0 10px}
+.chartbox{position:relative;height:290px;background:var(--s2);border:0;border-radius:20px}
+.chartbox canvas{display:block;width:100%;height:100%}
+.tip{position:absolute;top:8px;pointer-events:none;background:var(--s3);border-radius:999px;padding:4px 12px;font-size:.78rem;display:none;white-space:nowrap;box-shadow:var(--e2)}
+.xh{position:absolute;top:0;bottom:0;width:1px;background:rgba(227,230,238,.25);pointer-events:none;display:none}
+.ins{list-style:none;padding:0;display:grid;gap:8px}
+.ins li{display:flex;gap:10px;align-items:flex-start;padding:12px 16px;border-radius:18px;background:var(--s2);border:0;font-size:.9rem}
+.ins li::before{content:"";width:8px;height:8px;border-radius:50%;margin-top:9px;flex:none;background:var(--mute)}
+.ins li.good::before{background:var(--win)}.ins li.bad::before{background:var(--loss)}
+.heatwrap{display:flex;gap:8px;direction:rtl}
+.heatl{display:grid;grid-template-rows:repeat(7,1fr);gap:4px;font-size:.66rem;color:var(--mute);text-align:center}
+.heat{display:grid;grid-template-rows:repeat(7,1fr);grid-auto-flow:column;grid-auto-columns:1fr;gap:4px;flex:1}
+.hc{aspect-ratio:1;border-radius:5px;background:var(--s2);min-width:12px}
+.hc.fut{background:transparent}
+.bd{display:grid;gap:2px}
+.bd-row{display:grid;grid-template-columns:minmax(90px,150px) 1fr 76px minmax(210px,auto);gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid rgba(58,63,75,.5);font-size:.86rem}
+.bd-row.low{opacity:.55}
+.bd-bar{height:10px;background:var(--s3);border-radius:5px;overflow:hidden}
+.bd-bar i{display:block;height:100%;border-radius:5px}
+.bd-bar i.p{background:var(--win)}.bd-bar i.n{background:var(--loss)}
+.bd-v{font-weight:700;text-align:end}
+.bd-m{display:flex;gap:12px;color:var(--mute);font-size:.78rem;justify-content:flex-end}
+.tblw{overflow-x:auto}
+.tbl{width:100%;border-collapse:collapse;font-size:.85rem}
+.tbl th{font-weight:600;color:var(--mute);font-size:.74rem;text-align:start;padding:8px;border-bottom:1px solid var(--line);white-space:nowrap}
+.tbl td{padding:9px 8px;border-bottom:1px solid rgba(58,63,75,.5)}
+.tbl tr.low td{opacity:.55}
+.tbl tr.base td{color:var(--mute)}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:26px}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.pair div{background:var(--s2);border-radius:18px;padding:12px 16px}
+.pair small{display:block;color:var(--mute);font-size:.74rem}
+.pair b{font-size:1.15rem}
+
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--s3);border:0;color:var(--ink);padding:12px 22px;border-radius:999px;box-shadow:var(--e3);opacity:0;pointer-events:none;transition:all .2s;z-index:200;font-size:.88rem}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+@media(max-width:700px){
+  main{padding:14px 12px 96px}
+  .top{padding:6px 10px;gap:8px}
+  .tickets{grid-template-columns:1fr}
+  .tools{border-radius:24px}
+  .modal{padding:0;align-items:flex-end}
+  .sheet,.sheet.wide{max-width:none;max-height:96vh;border-radius:28px 28px 0 0}
+  .sheet-foot{border-radius:0}
+  .kpis{grid-template-columns:repeat(2,1fr)}
+  .sumbar{grid-template-columns:repeat(2,1fr)}
+  .bd-row{grid-template-columns:minmax(70px,110px) 1fr 70px}
+  .bd-m{grid-column:1/-1;justify-content:flex-start}
+  .two,.two-col{grid-template-columns:1fr}
+  .tools select{flex:1}
+  .btn.big{width:100%}
+  details.sec{padding:4px 14px 14px;border-radius:24px}
+}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+
+/* ===== Navigation: side rail on wide screens, bottom bar on narrow ===== */
+.top{backdrop-filter:none}
+.tab{display:flex;flex-direction:column;align-items:center;gap:4px;min-width:64px;min-height:0;padding:0;border:0;border-radius:0;background:none;color:var(--mute);font-size:.76rem;font-weight:600;transition:color .15s}
+.tab:hover{background:none;color:var(--ink)}
+.tab .ti{width:60px;height:34px;border-radius:999px;display:grid;place-items:center;transition:background .2s}
+.tab svg{width:24px;height:24px;fill:currentColor}
+.tab:hover .ti{background:rgba(227,230,238,.08)}
+.tab.on{background:none;color:var(--ink)}
+.tab.on .ti{background:var(--pc);color:var(--on-pc)}
+
+/* filter bars as pill cards */
+.rfilters{padding:10px;background:var(--s1);border-radius:999px;box-shadow:var(--e1)}
+.rfilters select{background:var(--s3)}
+.heatwrap{max-width:420px}
+
+@media(max-width:799px){
+  .top{padding:8px 14px;gap:8px;background:var(--bg)}
+  .top h1{flex:1;font-size:1.1rem;color:var(--ink)}
+  .tabs{position:fixed;inset-inline:0;bottom:0;z-index:30;justify-content:space-around;gap:0;padding:10px 12px calc(12px + env(safe-area-inset-bottom));background:#1c2027;box-shadow:0 -1px 0 var(--line)}
+  .tab{flex:1}
+  main{padding:14px 12px 120px}
+  #toast{bottom:104px}
+  .rfilters{border-radius:24px}
+}
+
+@media(min-width:800px){
+  .top{position:fixed;inset-block:0;inset-inline-start:0;width:104px;flex-direction:column;align-items:center;gap:6px;padding:22px 8px 18px;background:#14171d;box-shadow:none;border-inline-end:1px solid rgba(58,63,75,.55);z-index:30}
+  .top h1{font-size:.82rem;line-height:1.45;text-align:center;color:var(--gold);margin-bottom:22px;padding:0 4px}
+  .tabs{flex:1;flex-direction:column;align-items:center;gap:18px}
+  .top .icon{width:48px;height:48px;font-size:1.3rem}
+  main{max-width:none;margin:0;margin-inline-start:104px;padding:28px max(32px,calc((100vw - 104px - 1480px)/2)) 64px}
+  .rfilters{position:sticky;top:14px;z-index:5}
+}
+
+/* ===== Large screens: use the width ===== */
+@media(min-width:1200px){
+  /* trades: open trades pinned in a side column, history gets the wide area */
+  main:has(>.bar){display:grid;grid-template-columns:minmax(340px,400px) minmax(0,1fr);column-gap:32px;align-items:start}
+  main:has(>.bar)>.bar{grid-column:1/-1}
+  main:has(>.bar)>section:nth-of-type(1){position:sticky;top:20px;max-height:calc(100vh - 40px);overflow-y:auto;padding:4px}
+  main:has(>.bar) .tickets{grid-template-columns:1fr}
+  .tools{position:sticky;top:14px;z-index:5}
+  .sheet.wide{max-width:900px}
+
+  /* report: sections flow in two columns */
+  .chartbox{height:360px}
+  .secs{columns:2;column-gap:18px}
+  .secs>details.sec{break-inside:avoid;margin:0 0 18px}
+  .secs .bd-row{grid-template-columns:minmax(80px,130px) 1fr 70px}
+  .secs .bd-m{grid-column:1/-1;justify-content:flex-start}
+  .secs .two-col{grid-template-columns:1fr;gap:6px}
+  .kpi b{font-size:1.4rem}
+  .kpi.main b{font-size:1.9rem}
+}
+.tab:focus-visible{border-radius:16px}
+.sheet:focus{outline:none}
+@media(max-width:700px){.sheet-foot{padding-bottom:calc(18px + env(safe-area-inset-bottom))}}
+</style>
+</head>
+<body>
+<header class="top">
+  <h1>ژورنال ترید</h1>
+  <nav class="tabs">
+    <button class="tab on" data-v="trades"><span class="ti"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2zM9 17H7v-2h2v2zm0-4H7v-2h2v2zm0-4H7V7h2v2zm8 8h-6v-2h6v2zm0-4h-6v-2h6v2zm0-4h-6V7h6v2z"/></svg></span><span>تریدها</span></button>
+    <button class="tab" data-v="report"><span class="ti"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 9.2h3V19H5V9.2zM10.6 5h2.8v14h-2.8V5zm5.6 8H19v6h-2.8v-6z"/></svg></span><span>گزارش</span></button>
+  </nav>
+  <button class="icon" data-act="settings" aria-label="تنظیمات">⚙</button>
+</header>
+<main id="view"></main>
+<div id="modal" class="modal"></div>
+<div id="toast" role="status" aria-live="polite"></div>
+<input type="file" id="importFile" accept=".kj,.json,application/json" hidden>
+<script>
+(function(){'use strict';
+/* ============ helpers ============ */
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const uid = p => p + '_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const clone = o => JSON.parse(JSON.stringify(o));
+const pad = n => String(n).padStart(2, '0');
+const round2 = x => Math.round(x * 100) / 100;
+const fmtLocal = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+const nowLocal = () => fmtLocal(new Date());
+const toKey = d => fmtLocal(d).slice(0, 10);
+const hhmm = s => (s || '').slice(11, 16);
+const parseT = s => new Date(s);
+const faDay = key => { const [y, m, d] = key.split('-').map(Number); return new Intl.DateTimeFormat('fa-IR-u-ca-persian', {weekday:'long', day:'numeric', month:'long'}).format(new Date(y, m-1, d)); };
+const faMonth = key => { const [y, m] = key.split('-').map(Number); return new Intl.DateTimeFormat('fa-IR-u-ca-persian', {month:'long', year:'numeric'}).format(new Date(y, m-1, 15)); };
+const WEEK = ['شنبه','یکشنبه','دوشنبه','سه‌شنبه','چهارشنبه','پنجشنبه','جمعه'];
+const persianWd = d => (d.getDay() + 1) % 7;            // 0 = شنبه
+const toNum = s => { const t = String(s ?? '').replace(/[۰-۹]/g, c => '۰۱۲۳۴۵۶۷۸۹'.indexOf(c)).replace(/[٠-٩]/g, c => '٠١٢٣٤٥٦٧٨٩'.indexOf(c)).replace(/[٫،,]/g, '.').replace(/[−–]/g, '-').trim(); return t === '' || t === '-' || t === '+' ? NaN : Number(t); };
+const sgn = x => x > 0 ? 'pos' : x < 0 ? 'neg' : 'zero';
+const N = (txt, x) => `<span class="num ${x === undefined ? '' : sgn(x)}" dir="ltr">${txt}</span>`;
+const fmtR = x => (x > 0 ? '+' : '') + round2(x).toFixed(2) + 'R';
+const fmtP = x => (x > 0 ? '+' : '') + round2(x).toFixed(2) + '%';
+const fmtDur = m => m < 60 ? `${Math.round(m)} دقیقه` : `${Math.floor(m/60)} ساعت${Math.round(m%60) ? ' و ' + Math.round(m%60) + ' دقیقه' : ''}`;
+
+const DIR = {Buy:'خرید', Sell:'فروش'};
+const VIEW = {Bullish:'صعودی', Bearish:'نزولی', Neutral:'خنثی'};
+const EXIT = {SL:'حد ضرر', TP:'حد سود', Trail:'تریل استاپ', Early:'خروج زودهنگام', Manual:'دستی'};
+const HTF = ['M15','M30','H1','H2','H4','D1','W1','MN'];
+const ATF = ['M5','M15','M30','H1','H2','H4'];
+const ETF = ['M1','M5','M15','M30','H1'];
+
+/* ============ defaults ============ */
+const mk = arr => arr.map(([id, label]) => ({id, label, active: true}));
+const DEFAULTS = () => ({
+  checklists: {
+    higher: mk([['higher-price-action','پرایس اکشن'],['higher-lms','لول LMS'],['higher-pattern-123','پترن ۱۲۳'],['higher-imbalance','عدم تناسب']]),
+    analysis: mk([['analysis-price-action','پرایس اکشن'],['analysis-lms','لول LMS'],['analysis-pattern-123','پترن 123'],['analysis-imbalance','عدم تناسب'],['analysis-divergence','دایورجنس'],['analysis-hidden','هیدن']]),
+    entry: mk([['entry-pattern-123','پترن 123'],['entry-lms','لول LMS'],['entry-confirmation-candle','کندل تایید'],['entry-imbalance-15','عدم تناسب 15'],['entry-imbalance-60','عدم تناسب 60']])
+  },
+  psychology: {
+    before: mk([['before-fomo','ترس از دست دادن فرصت'],['before-entry-fear','ترس از ورود'],['before-doubt-anxiety','تردید / اضطراب'],['before-excitement','هیجان'],['before-greed','طمع'],['before-haste','عجله'],['before-previous-trades','تاثیر معاملات قبل']]),
+    during: mk([['during-stress','استرس'],['during-loss-fear','ترس از ضرر'],['during-profit-fear','ترس از دست دادن سود'],['during-greed','طمع'],['during-manipulation','دستکاری معامله'],['during-emotional-entry','ورود هیجانی'],['during-revenge','انتقام'],['early-entry','ورود زودهنگام']]),
+    after: mk([['after-false-confidence','اعتماد به نفس کاذب'],['after-disappointed','ناامید / ناراحت'],['after-emotional-exit','خروج احساسی'],['after-revenge','انتقام']])
+  },
+  noiseThreshold: 0.3,
+  symbols: ['XAUUSD','EURUSD','USDJPY','AUDUSD','GBPUSD','USDCAD'],
+  last: {risk: 1, higherTF: 'H4', analysisTF: 'H1', entryTF: 'M5'}
+});
+
+/* ============ storage (IndexedDB + localStorage mirror) ============ */
+const Store = {
+  key: 'kid-journal-v3', db: null,
+  async init() {
+    try {
+      this.db = await new Promise((res, rej) => {
+        const r = indexedDB.open('kid-journal-v3', 1);
+        r.onupgradeneeded = () => r.result.createObjectStore('kv');
+        r.onsuccess = () => res(r.result);
+        r.onerror = () => rej(r.error);
+      });
+    } catch (e) { this.db = null; }
+  },
+  async load() {
+    let a = null, b = null;
+    if (this.db) {
+      try {
+        a = await new Promise((res, rej) => { const r = this.db.transaction('kv').objectStore('kv').get('data'); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
+      } catch (e) {}
+    }
+    try { const s = localStorage.getItem(this.key); if (s) b = JSON.parse(s); } catch (e) {}
+    if (a && b) return (b.savedAt || 0) > (a.savedAt || 0) ? b : a;   // newest copy wins
+    return a || b || null;
+  },
+  async save(data) {
+    let ok = false;
+    try { localStorage.setItem(this.key, JSON.stringify(data)); ok = true; } catch (e) {}
+    if (this.db) {
+      try {
+        await new Promise((res, rej) => { const tx = this.db.transaction('kv', 'readwrite'); tx.objectStore('kv').put(data, 'data'); tx.oncomplete = () => res(); tx.onerror = () => rej(tx.error); tx.onabort = () => rej(tx.error); });
+        ok = true;
+      } catch (e) {}
+    }
+    return ok;
+  }
+};
+
+/* ============ state ============ */
+let S = {trades: [], settings: DEFAULTS()};
+let saveTimer = null;
+const snapshot = () => ({v: 3, savedAt: Date.now(), trades: S.trades, settings: S.settings});
+function persist() {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(async () => { if (!(await Store.save(snapshot()))) toast('ذخیره‌سازی ناموفق بود. از پشتیبان‌گیری استفاده کن'); }, 120);
+}
+window.addEventListener('pagehide', () => { try { localStorage.setItem(Store.key, JSON.stringify(snapshot())); } catch (e) {} });
+
+function normTrade(t) {
+  const base = t.openedAt || nowLocal();
+  return {
+    id: t.id || uid('t'), symbol: t.symbol || '', direction: t.direction || '', higherView: t.higherView || '',
+    higherTF: t.higherTF || '', analysisTF: t.analysisTF || '',
+    checks: {higher: t.checks?.higher || [], analysis: t.checks?.analysis || []},
+    psychBefore: t.psychBefore || [], note: t.note || '', openedAt: base,
+    score: typeof t.score === 'number' ? t.score : null, demo: !!t.demo, createdAt: t.createdAt || base,
+    entries: (t.entries || []).map(e => ({
+      id: e.id || uid('e'), openedAt: e.openedAt || base, risk: Number(e.risk) > 0 ? Number(e.risk) : 1, tf: e.tf || '',
+      checks: e.checks || [], score: typeof e.score === 'number' ? e.score : null, psychDuring: e.psychDuring || [],
+      resultR: (e.resultR === null || e.resultR === undefined || e.resultR === '') ? null : Number(e.resultR),
+      closedAt: e.closedAt || '', exitReason: e.exitReason || '', psychAfter: e.psychAfter || []
+    }))
+  };
+}
+function normalize(raw) {
+  const base = DEFAULTS(), s = raw?.settings || {};
+  ['higher','analysis','entry'].forEach(k => { if (Array.isArray(s.checklists?.[k])) base.checklists[k] = s.checklists[k].map(x => ({id: x.id || uid('cl'), label: String(x.label || 'بدون نام'), active: x.active !== false})); });
+  ['before','during','after'].forEach(k => { if (Array.isArray(s.psychology?.[k])) base.psychology[k] = s.psychology[k].map(x => ({id: x.id || uid('ps'), label: String(x.label || 'بدون نام'), active: x.active !== false})); });
+  base.noiseThreshold = Number(s.noiseThreshold) > 0 ? Number(s.noiseThreshold) : 0.3;
+  if (Array.isArray(s.symbols) && s.symbols.length) base.symbols = s.symbols;
+  if (s.last) Object.assign(base.last, s.last);
+  return {trades: (raw?.trades || []).map(normTrade), settings: base};
+}
+/* converts a backup made by the previous (wizard) version */
+function migrateOld(p) {
+  const trades = p.trades.map(o => {
+    const openedAt = (o.date || toKey(new Date())) + 'T' + (o.time || '00:00');
+    return {
+      id: o.id || uid('t'), symbol: o.symbol, direction: o.direction, higherView: o.higherView, higherTF: o.higherTF, analysisTF: o.analysisTF,
+      checks: {higher: o.higherChecklist || [], analysis: o.analysisChecklist || []}, psychBefore: o.psychology?.before || [],
+      note: o.note || '', openedAt, score: null,
+      entries: (o.entries || []).map(e => {
+        const done = !!e.result || Number(e.resultR) !== 0;
+        return {id: uid('e'), openedAt, risk: e.riskPercent, tf: e.entryTF, checks: e.entryChecklist || [], score: null,
+          psychDuring: e.psychology?.during || [], resultR: done ? (Number(e.resultR) || 0) : null, closedAt: done ? openedAt : '',
+          exitReason: e.exitReason || '', psychAfter: e.psychology?.after || []};
+      })
+    };
+  });
+  return normalize({trades, settings: p.settings});
+}
+
+/* ============ trade helpers ============ */
+const entryClosed = e => e.resultR !== null && e.resultR !== undefined;
+const isClosed = t => t.entries.length > 0 && t.entries.every(entryClosed);
+const tR = t => round2(t.entries.reduce((a, e) => a + (entryClosed(e) ? e.resultR : 0), 0));
+const tPct = t => round2(t.entries.reduce((a, e) => a + (entryClosed(e) ? e.resultR * e.risk : 0), 0));
+const closeTime = t => t.entries.reduce((m, e) => e.closedAt && e.closedAt > m ? e.closedAt : m, '') || t.openedAt;
+const isSmall = t => { const r = Math.abs(tR(t)); return r !== 0 && r < S.settings.noiseThreshold; };
+const getTrade = id => S.trades.find(t => t.id === id);
+const cls = r => r > 0 ? 'win' : r < 0 ? 'loss' : 'be';
+function calcScore(...sets) {
+  const L = S.settings.checklists;
+  const all = [...L.higher, ...L.analysis].filter(i => i.active !== false);
+  if (!all.length) return null;
+  const chosen = new Set(); sets.forEach(s => s.forEach(i => chosen.add(i)));
+  return all.filter(i => chosen.has(i.id)).length / all.length;
+}
+function entryScore(set) {
+  const all = S.settings.checklists.entry.filter(i => i.active !== false);
+  return all.length ? all.filter(i => set.has(i.id)).length / all.length : null;
+}
+const labelMap = () => { const m = {}; Object.values(S.settings.checklists).concat(Object.values(S.settings.psychology)).forEach(l => l.forEach(i => m[i.id] = i.label)); return m; };
+const getList = path => { const [a, b] = path.split('.'); return S.settings[a][b]; };
+const itemsFor = (list, sel) => list.filter(i => i.active !== false || sel.has(i.id));
+
+/* ============ small UI utils ============ */
+let toastTimer;
+function toast(msg) { const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 2200); }
+const ring = s => `<span class="ring" style="--p:${Math.round(s*100)}" title="پایبندی به چک‌لیست"><i>${Math.round(s*100)}</i></span>`;
+const chipsHTML = (items, sel, group, sm) => `<div class="chips${sm ? ' sm' : ''}" data-group="${group}">` + (items.length ? items.map(i => `<button type="button" class="chip${sel.has(i.id) ? ' on' : ''}" data-id="${i.id}">${esc(i.label)}</button>`).join('') : '<span class="mute">آیتمی تعریف نشده (از تنظیمات اضافه کن)</span>') + '</div>';
+const segHTML = (name, opts, cur) => `<div class="seg" data-seg="${name}">` + opts.map(([v, l, c]) => `<button type="button" class="opt ${c || ''}${cur === v ? ' on' : ''}" data-val="${v}">${l}</button>`).join('') + '</div>';
+const selHTML = (id, opts, cur) => `<select id="${id}">` + opts.map(o => `<option${o === cur ? ' selected' : ''}>${o}</option>`).join('') + '</select>';
+
+/* ============ sheet (modal) system ============ */
+let ctx = null;
+let lastFocus = null;
+function openSheet(html, c, wide) {
+  closeSheet(); ctx = c || {};
+  lastFocus = document.activeElement;
+  const m = $('#modal');
+  m.innerHTML = `<div class="sheet${wide ? ' wide' : ''}" role="dialog" aria-modal="true" tabindex="-1">${html}</div>`;
+  m.classList.add('open'); document.body.classList.add('lock');
+  ctx.onMount && ctx.onMount();
+  const sh = $('.sheet', m); if (sh) sh.focus({preventScroll: true});
+}
+function closeSheet() {
+  const m = $('#modal'), was = m.classList.contains('open');
+  m.classList.remove('open'); m.innerHTML = ''; document.body.classList.remove('lock'); ctx = null;
+  if (was && lastFocus && lastFocus.isConnected) { try { lastFocus.focus({preventScroll: true}); } catch (e) {} }
+  lastFocus = null;
+}
+
+/* ============ trade form ============ */
+function openTradeForm(tradeId) {
+  const old = tradeId ? getTrade(tradeId) : null, L = S.settings.checklists, P = S.settings.psychology;
+  const d = {
+    direction: old?.direction || '', higherView: old?.higherView || '',
+    higher: new Set(old?.checks.higher || []), analysis: new Set(old?.checks.analysis || []), before: new Set(old?.psychBefore || [])
+  };
+  const recent = [...new Set([...S.trades.slice().sort((a, b) => b.openedAt.localeCompare(a.openedAt)).map(t => t.symbol), ...S.settings.symbols])].filter(Boolean).slice(0, 8);
+  const hItems = itemsFor(L.higher, d.higher), aItems = itemsFor(L.analysis, d.analysis);
+  const total = hItems.filter(i => i.active !== false).length + aItems.filter(i => i.active !== false).length;
+  const html = `
+    <div class="sheet-head"><h3>${old ? 'ویرایش ترید' : 'ترید جدید'}</h3><button class="icon" data-close aria-label="بستن">✕</button></div>
+    <div class="sheet-body">
+      <div class="fld"><label for="f-symbol">نماد</label>
+        <input id="f-symbol" value="${esc(old?.symbol || '')}" placeholder="مثلا XAUUSD" autocomplete="off" autocapitalize="characters" dir="ltr" style="text-align:right">
+        <div class="quick">${recent.map(s => `<button type="button" class="q" data-target="f-symbol" data-q="${esc(s)}">${esc(s)}</button>`).join('')}</div></div>
+      <div class="fld"><label>جهت معامله</label>${segHTML('direction', [['Buy','خرید','buy'],['Sell','فروش','sell']], d.direction)}</div>
+      <div class="fld"><label>دیدگاه تایم بالا</label>
+        ${segHTML('higherView', [['Bullish','صعودی','bull'],['Bearish','نزولی','bear'],['Neutral','خنثی','']], d.higherView)}
+        <div class="inline" style="margin-top:10px"><span class="mute">تایم‌فریم</span>${selHTML('f-htf', HTF, old?.higherTF || S.settings.last.higherTF)}<span class="mute" style="margin-inline-start:12px">تایم‌فریم تحلیل</span>${selHTML('f-atf', ATF, old?.analysisTF || S.settings.last.analysisTF)}</div></div>
+      <div class="fld"><div class="lbl"><span>چک‌لیست</span><span id="cnt" class="num"></span><span class="grow"><i id="cntbar"></i></span></div>
+        <div class="sub">تایم بالا</div>${chipsHTML(hItems, d.higher, 'higher')}
+        <div class="sub">تحلیل</div>${chipsHTML(aItems, d.analysis, 'analysis')}</div>
+      <div class="fld"><div class="lbl">حال ذهنی قبل از معامله</div>${chipsHTML(itemsFor(P.before, d.before), d.before, 'before', true)}</div>
+      <div class="fld"><details class="more" ${old?.note ? 'open' : ''}><summary>یادداشت و زمان</summary>
+        <textarea id="f-note" placeholder="یادداشت دلخواه">${esc(old?.note || '')}</textarea>
+        <label for="f-when" style="display:block;margin:10px 0 6px;font-size:.82rem;color:var(--mute)">زمان باز شدن</label>
+        <input type="datetime-local" id="f-when" value="${old?.openedAt || nowLocal()}"></details></div>
+    </div>
+    <div class="sheet-foot">${old ? '<button class="btn" id="saveOnly">ذخیره</button>' : '<button class="btn" id="saveOnly">فقط ذخیره</button><button class="btn primary" id="saveEntry">ذخیره و ثبت ورود</button>'}</div>`;
+  const updCount = () => { const n = [...d.higher, ...d.analysis].filter(id => [...hItems, ...aItems].some(i => i.id === id && i.active !== false)).length; $('#cnt').textContent = `${n} از ${total}`; $('#cntbar').style.width = (total ? n / total * 100 : 0) + '%'; };
+  const save = goEntry => {
+    const symbol = $('#f-symbol').value.trim().toUpperCase();
+    if (!symbol) return toast('نماد را وارد کن');
+    if (!d.direction) return toast('جهت معامله را انتخاب کن');
+    const data = {symbol, direction: d.direction, higherView: d.higherView, higherTF: $('#f-htf').value, analysisTF: $('#f-atf').value,
+      checks: {higher: [...d.higher], analysis: [...d.analysis]}, psychBefore: [...d.before], note: $('#f-note').value.trim(),
+      openedAt: $('#f-when').value || nowLocal(), score: calcScore(d.higher, d.analysis)};
+    let t;
+    if (old) { Object.assign(old, data); t = old; }
+    else { t = {id: uid('t'), entries: [], createdAt: new Date().toISOString(), ...data}; S.trades.push(t); }
+    if (!S.settings.symbols.includes(symbol)) S.settings.symbols.unshift(symbol);
+    S.settings.last.higherTF = data.higherTF; S.settings.last.analysisTF = data.analysisTF;
+    persist(); closeSheet(); render(); toast('ذخیره شد');
+    if (goEntry) openEntryForm(t.id);
+  };
+  openSheet(html, {
+    onChip: (g, id, on) => { d[g][on ? 'add' : 'delete'](id); if (g !== 'before') updCount(); },
+    onSeg: (n, v) => { d[n] = v; },
+    onMount: () => { updCount(); $('#saveOnly').onclick = () => save(false); const b = $('#saveEntry'); if (b) b.onclick = () => save(true); }
+  });
+}
+
+/* ============ entry form ============ */
+function openEntryForm(tradeId, entryId) {
+  const t = getTrade(tradeId); if (!t) return;
+  const old = entryId ? t.entries.find(e => e.id === entryId) : null, E = S.settings.checklists.entry, P = S.settings.psychology;
+  const d = {tf: old?.tf || S.settings.last.entryTF, checks: new Set(old?.checks || []), during: new Set(old?.psychDuring || [])};
+  const items = itemsFor(E, d.checks), total = items.filter(i => i.active !== false).length;
+  const html = `
+    <div class="sheet-head"><h3>${old ? 'ویرایش ورود' : 'ورود جدید'} <span class="mute" style="font-weight:500">${esc(t.symbol)} ${DIR[t.direction]}</span></h3><button class="icon" data-close aria-label="بستن">✕</button></div>
+    <div class="sheet-body">
+      <div class="fld"><label for="f-risk">ریسک (درصد از حساب)</label>
+        <input id="f-risk" inputmode="decimal" dir="ltr" style="text-align:right" value="${old?.risk ?? S.settings.last.risk}">
+        <div class="quick">${[0.25, 0.5, 1, 1.5, 2].map(v => `<button type="button" class="q" data-target="f-risk" data-q="${v}">${v}%</button>`).join('')}</div></div>
+      <div class="fld"><label>تایم‌فریم ورود</label>${segHTML('tf', ETF.map(x => [x, x, '']), d.tf)}</div>
+      <div class="fld"><div class="lbl"><span>چک‌لیست ورود</span><span id="cnt" class="num"></span><span class="grow"><i id="cntbar"></i></span></div>${chipsHTML(items, d.checks, 'checks')}</div>
+      <div class="fld"><div class="lbl">حال ذهنی هنگام ورود</div>${chipsHTML(itemsFor(P.during, d.during), d.during, 'during', true)}</div>
+      <div class="fld"><label for="f-when">زمان ورود</label><input type="datetime-local" id="f-when" value="${old?.openedAt || nowLocal()}"></div>
+    </div>
+    <div class="sheet-foot"><button class="btn primary" id="saveEntry">${old ? 'ذخیره' : 'ثبت ورود'}</button></div>`;
+  const updCount = () => { const n = [...d.checks].filter(id => items.some(i => i.id === id && i.active !== false)).length; $('#cnt').textContent = `${n} از ${total}`; $('#cntbar').style.width = (total ? n / total * 100 : 0) + '%'; };
+  openSheet(html, {
+    onChip: (g, id, on) => { d[g][on ? 'add' : 'delete'](id); if (g === 'checks') updCount(); },
+    onSeg: (n, v) => { d[n] = v; },
+    onMount: () => {
+      updCount();
+      $('#saveEntry').onclick = () => {
+        const risk = toNum($('#f-risk').value);
+        if (!(risk > 0)) return toast('ریسک را درست وارد کن');
+        const data = {risk, tf: d.tf, checks: [...d.checks], score: entryScore(d.checks), psychDuring: [...d.during], openedAt: $('#f-when').value || nowLocal()};
+        if (old) Object.assign(old, data);
+        else t.entries.push({id: uid('e'), ...data, resultR: null, closedAt: '', exitReason: '', psychAfter: []});
+        S.settings.last.risk = risk; S.settings.last.entryTF = d.tf;
+        persist(); closeSheet(); render(); toast('ورود ثبت شد');
+      };
+    }
+  });
+}
+
+/* ============ result form ============ */
+function openResultForm(tradeId, onlyIds) {
+  const t = getTrade(tradeId); if (!t) return;
+  const targets = t.entries.filter(e => onlyIds ? onlyIds.includes(e.id) : !entryClosed(e));
+  if (!targets.length) return toast(t.entries.length ? 'همه ورودی‌ها نتیجه دارند' : 'اول یک ورود ثبت کن');
+  const P = S.settings.psychology;
+  const d = {}; targets.forEach(e => d[e.id] = {exit: e.exitReason || '', after: new Set(e.psychAfter || [])});
+  const exitOpts = Object.entries(EXIT).map(([k, v]) => [k, v, '']);
+  const blocks = targets.map((e, i) => `
+    <div class="rbox" data-eid="${e.id}">
+      <div class="rh"><span>ورود ${t.entries.indexOf(e) + 1}</span><span class="mute">ریسک ${N(e.risk + '%')}</span><span class="mute">${esc(e.tf)}</span></div>
+      <label class="lbl" for="r-${e.id}">نتیجه به R</label>
+      <input class="rinput" id="r-${e.id}" inputmode="decimal" autocomplete="off" placeholder="مثلا 2 یا -1" value="${entryClosed(e) ? e.resultR : ''}">
+      <div class="quick" style="justify-content:center">${[-1, 0, 1, 2, 3].map(v => `<button type="button" class="q" data-target="r-${e.id}" data-q="${v}">${v > 0 ? '+' : ''}${v}</button>`).join('')}</div>
+      <div class="pctline" id="pct-${e.id}"></div>
+      <div class="fld"><label>دلیل خروج</label><div class="chips sm" data-seg="exit:${e.id}">${exitOpts.map(([v, l]) => `<button type="button" class="chip opt-chip${d[e.id].exit === v ? ' on' : ''}" data-val="${v}">${l}</button>`).join('')}</div></div>
+      <div class="fld"><div class="lbl">حال ذهنی بعد از نتیجه</div>${chipsHTML(itemsFor(P.after, d[e.id].after), d[e.id].after, 'after:' + e.id, true)}</div>
+    </div>`).join('');
+  const html = `
+    <div class="sheet-head"><h3>ثبت نتیجه <span class="mute" style="font-weight:500">${esc(t.symbol)} ${DIR[t.direction]}</span></h3><button class="icon" data-close aria-label="بستن">✕</button></div>
+    <div class="sheet-body">${blocks}${targets.length > 1 ? '<p class="hint" style="margin-top:12px">ورودی‌ای که R ندارد، باز می‌ماند.</p>' : ''}</div>
+    <div class="sheet-foot"><button class="btn primary" id="saveRes">ذخیره نتیجه</button></div>`;
+  const upd = e => { const r = toNum($('#r-' + e.id).value); $('#pct-' + e.id).innerHTML = isNaN(r) ? '' : `یعنی ${N(fmtP(r * e.risk), r)} از حساب`; };
+  openSheet(html, {
+    onChip: (g, id, on) => { const [k, eid] = g.split(':'); if (k === 'after') d[eid].after[on ? 'add' : 'delete'](id); },
+    onSegChip: (name, v, el) => { const eid = name.split(':')[1]; const was = d[eid].exit === v; d[eid].exit = was ? '' : v; $$('.chip', el.parentElement).forEach(c => c.classList.toggle('on', !was && c.dataset.val === v)); },
+    onInput: el => { const e = targets.find(x => 'r-' + x.id === el.id); if (e) upd(e); },
+    onQuick: el => { const e = targets.find(x => 'r-' + x.id === el.dataset.target); if (e) upd(e); },
+    onMount: () => {
+      targets.forEach(upd);
+      $('#saveRes').onclick = () => {
+        const todo = [];
+        for (const e of targets) {
+          const raw = $('#r-' + e.id).value, r = toNum(raw);
+          if (raw.trim() === '' && !entryClosed(e)) continue;
+          if (isNaN(r)) return toast('R را درست وارد کن (مثلا 2 یا -1)');
+          todo.push([e, round2(r)]);
+        }
+        if (!todo.length) return toast('حداقل یک R وارد کن');
+        todo.forEach(([e, r]) => {
+          e.resultR = r; e.exitReason = d[e.id].exit; e.psychAfter = [...d[e.id].after];
+          if (!e.closedAt) e.closedAt = nowLocal();
+        });
+        persist(); closeSheet(); render(); toast('نتیجه ثبت شد');
+      };
+    }
+  });
+}
+
+/* ============ detail ============ */
+function openDetail(id) {
+  const t = getTrade(id); if (!t) return;
+  const L = labelMap(), closed = isClosed(t), r = tR(t), p = tPct(t);
+  const tags = ids => ids && ids.length ? `<div class="tags">${ids.map(i => `<span class="tag">${esc(L[i] || 'آیتم حذف‌شده')}</span>`).join('')}</div>` : '<span class="mute">—</span>';
+  const openEnts = t.entries.filter(e => !entryClosed(e)).length;
+  const ents = t.entries.length ? t.entries.map((e, i) => `
+    <div class="ebox"><div class="kv">
+      <span><span>ورود ${i + 1}:</span> ریسک ${N(e.risk + '%')}</span><span><span>تایم‌فریم:</span> ${esc(e.tf || '—')}</span><span><span>زمان:</span> ${N(hhmm(e.openedAt))}</span>
+      <span><span>نتیجه:</span> ${entryClosed(e) ? N(fmtR(e.resultR), e.resultR) + ' ' + N('(' + fmtP(e.resultR * e.risk) + ')', e.resultR) : '<b style="color:var(--gold)">باز</b>'}</span>
+      ${e.exitReason ? `<span><span>خروج:</span> ${EXIT[e.exitReason] || e.exitReason}</span>` : ''}
+      ${e.score != null ? `<span><span>چک‌لیست ورود:</span> ${Math.round(e.score * 100)}٪</span>` : ''}</div>
+      ${e.checks.length ? `<div class="sub">چک‌لیست</div>${tags(e.checks)}` : ''}
+      ${e.psychDuring.length ? `<div class="sub">هنگام ورود</div>${tags(e.psychDuring)}` : ''}
+      ${e.psychAfter.length ? `<div class="sub">بعد از نتیجه</div>${tags(e.psychAfter)}` : ''}
+      <div class="acts"><button class="btn small" data-act="edit-entry" data-id="${t.id}" data-eid="${e.id}">ویرایش ورود</button>
+      <button class="btn small" data-act="rec-result" data-id="${t.id}" data-eid="${e.id}">${entryClosed(e) ? 'ویرایش نتیجه' : 'ثبت نتیجه'}</button>
+      <button class="btn small danger" data-act="del-entry" data-id="${t.id}" data-eid="${e.id}">حذف</button></div></div>`).join('') : '<span class="mute">هنوز ورودی ثبت نشده</span>';
+  const html = `
+    <div class="sheet-head"><h3><span class="sym">${esc(t.symbol)}</span> <span class="dir ${t.direction === 'Buy' ? 'buy' : 'sell'}">${DIR[t.direction] || ''}</span></h3><button class="icon" data-close aria-label="بستن">✕</button></div>
+    <div class="sheet-body">
+      <div class="sumbar">
+        <div><small>وضعیت</small><b>${closed ? 'بسته' : 'باز'}</b></div>
+        <div><small>مجموع R</small><b>${N(fmtR(r), r)}</b></div>
+        <div><small>درصد حساب</small><b>${N(fmtP(p), p)}</b></div>
+        <div><small>چک‌لیست</small><b>${t.score != null ? Math.round(t.score * 100) + '٪' : '—'}</b></div></div>
+      <div class="dsec"><h5>تایم بالا و تحلیل</h5><div class="kv">
+        <span><span>تاریخ:</span> ${faDay(t.openedAt.slice(0, 10))} ${N(hhmm(t.openedAt))}</span>
+        <span><span>دیدگاه:</span> ${VIEW[t.higherView] || '—'} (${esc(t.higherTF || '—')})</span><span><span>تایم‌فریم تحلیل:</span> ${esc(t.analysisTF || '—')}</span></div>
+        <div class="sub">چک‌لیست تایم بالا</div>${tags(t.checks.higher)}<div class="sub">چک‌لیست تحلیل</div>${tags(t.checks.analysis)}</div>
+      <div class="dsec"><h5>حال ذهنی قبل از معامله</h5>${tags(t.psychBefore)}</div>
+      ${t.note ? `<div class="dsec"><h5>یادداشت</h5><p style="white-space:pre-wrap">${esc(t.note)}</p></div>` : ''}
+      <div class="dsec"><h5>ورودی‌ها (${t.entries.length})</h5>${ents}</div>
+    </div>
+    <div class="sheet-foot"><button class="btn primary" data-act="add-entry" data-id="${t.id}">+ ورود</button>
+      ${openEnts ? `<button class="btn" data-act="rec-result" data-id="${t.id}">ثبت نتیجه</button>` : ''}
+      <button class="btn" data-act="edit-trade" data-id="${t.id}">ویرایش</button>
+      <button class="btn danger" data-act="del-trade" data-id="${t.id}">حذف</button></div>`;
+  openSheet(html, {backdrop: true}, true);
+}
+
+/* ============ views ============ */
+let view = 'trades';
+const HF = {q: '', sym: '', res: '', hideSmall: false};
+function render() {
+  $$('.tab').forEach(t => t.classList.toggle('on', t.dataset.v === view));
+  const v = $('#view');
+  if (view === 'trades') { v.innerHTML = tradesShell(); bindTools(); renderOpen(); renderHist(); }
+  else { v.innerHTML = reportShell(); bindReport(); renderReport(); }
+}
+function tradesShell() {
+  const syms = [...new Set(S.trades.map(t => t.symbol))].sort();
+  return `<div class="bar"><button class="btn primary big" data-act="new-trade">＋ ترید جدید</button></div>
+  <section><h2>تریدهای باز <span class="count" id="openCount"></span></h2><div id="open"></div></section>
+  <section><h2>تاریخچه</h2>
+    <div class="tools"><input id="hq" type="search" placeholder="جستجو در نماد و یادداشت" value="${esc(HF.q)}">
+      <select id="hsym"><option value="">همه نمادها</option>${syms.map(s => `<option${HF.sym === s ? ' selected' : ''}>${esc(s)}</option>`).join('')}</select>
+      <select id="hres"><option value="">همه نتایج</option><option value="win"${HF.res === 'win' ? ' selected' : ''}>سود</option><option value="loss"${HF.res === 'loss' ? ' selected' : ''}>ضرر</option><option value="be"${HF.res === 'be' ? ' selected' : ''}>بی‌تغییر</option></select>
+      <button class="btn ghost" id="hsmall"></button></div>
+    <div id="hist"></div></section>`;
+}
+function bindTools() {
+  $('#hq').oninput = e => { HF.q = e.target.value; renderHist(); };
+  $('#hsym').onchange = e => { HF.sym = e.target.value; renderHist(); };
+  $('#hres').onchange = e => { HF.res = e.target.value; renderHist(); };
+  $('#hsmall').onclick = () => { HF.hideSmall = !HF.hideSmall; renderHist(); };
+}
+function ticketHTML(t) {
+  const real = tR(t), done = t.entries.filter(entryClosed).length;
+  const ents = t.entries.length ? t.entries.map((e, i) => entryClosed(e)
+    ? `<button class="ent ${cls(e.resultR)}" data-act="rec-result" data-id="${t.id}" data-eid="${e.id}" title="ویرایش نتیجه"><span>ورود ${i + 1}</span>${N(fmtR(e.resultR), e.resultR)}</button>`
+    : `<button class="ent live" data-act="rec-result" data-id="${t.id}" data-eid="${e.id}" title="ثبت نتیجه"><span>ورود ${i + 1}</span><span>${N(e.risk + '%')}</span><span>باز</span></button>`).join('')
+    : '<span class="mute" style="font-size:.85rem">هنوز ورودی ثبت نشده</span>';
+  return `<article class="ticket ${t.direction === 'Buy' ? 'buy' : 'sell'}">
+    <div class="tk-head" data-act="view" data-id="${t.id}"><b class="sym">${esc(t.symbol)}</b><span class="dir">${DIR[t.direction]}</span>
+      ${t.higherView ? `<span class="mute" style="font-size:.8rem">تایم بالا ${VIEW[t.higherView]}</span>` : ''}<span class="grow"></span>${t.score != null ? ring(t.score) : ''}</div>
+    <div class="ents">${ents}</div>
+    ${done ? `<div class="meta">سود و زیان تا اینجا ${N(fmtR(real), real)}</div>` : ''}
+    <div class="tk-foot"><button class="btn small primary" data-act="add-entry" data-id="${t.id}">+ ورود</button>
+      <button class="btn small" data-act="rec-result" data-id="${t.id}"${t.entries.some(e => !entryClosed(e)) ? '' : ' disabled'}>ثبت نتیجه</button>
+      <button class="btn small ghost" data-act="view" data-id="${t.id}">جزئیات</button>
+      <time>${faDay(t.openedAt.slice(0, 10))} ${N(hhmm(t.openedAt))}</time></div></article>`;
+}
+function renderOpen() {
+  const list = S.trades.filter(t => !isClosed(t)).sort((a, b) => b.openedAt.localeCompare(a.openedAt));
+  $('#openCount').textContent = list.length ? `(${list.length})` : '';
+  $('#open').innerHTML = list.length ? `<div class="tickets">${list.map(ticketHTML).join('')}</div>`
+    : `<div class="empty">تریدی باز نیست.<br><button class="btn primary" data-act="new-trade">＋ ترید جدید</button></div>`;
+}
+function renderHist() {
+  const hs = $('#hsmall'); if (hs) hs.textContent = HF.hideSmall ? 'نمایش تریدهای کوچک' : 'پنهان‌کردن تریدهای کوچک';
+  let list = S.trades.filter(isClosed);
+  const q = HF.q.trim().toLowerCase();
+  if (q) list = list.filter(t => t.symbol.toLowerCase().includes(q) || t.note.toLowerCase().includes(q));
+  if (HF.sym) list = list.filter(t => t.symbol === HF.sym);
+  if (HF.res) list = list.filter(t => cls(tR(t)) === HF.res);
+  if (HF.hideSmall) list = list.filter(t => !isSmall(t));
+  const box = $('#hist'); if (!box) return;
+  if (!list.length) { box.innerHTML = `<div class="empty">${S.trades.some(isClosed) ? 'موردی با این فیلتر پیدا نشد' : 'هنوز ترید بسته‌شده‌ای نداری. بعد از ثبت نتیجه، تریدها اینجا می‌آیند.'}</div>`; return; }
+  const days = new Map(); list.forEach(t => { const k = t.openedAt.slice(0, 10); if (!days.has(k)) days.set(k, []); days.get(k).push(t); });
+  box.innerHTML = [...days.keys()].sort().reverse().map(k => {
+    const ts = days.get(k).sort((a, b) => b.openedAt.localeCompare(a.openedAt)), tot = round2(ts.reduce((a, t) => a + tR(t), 0));
+    return `<div class="dayh"><span>${faDay(k)}</span><span>${ts.length} ترید، مجموع ${N(fmtR(tot), tot)}</span></div>` + ts.map(t => {
+      const r = tR(t), p = tPct(t);
+      return `<div class="row" data-act="view" data-id="${t.id}"><span class="rb ${cls(r)}"></span><b class="sym">${esc(t.symbol)}</b><span class="dir ${t.direction === 'Buy' ? 'buy' : 'sell'}">${DIR[t.direction]}</span><span class="grow"></span>
+        <span class="meta">${t.entries.length} ورود</span>${t.score != null ? `<span class="meta">چک‌لیست ${Math.round(t.score * 100)}٪</span>` : ''}
+        <span class="rv">${N(fmtR(r), r)}</span><span class="pv">${N(fmtP(p), p)}</span><time>${N(hhmm(t.openedAt))}</time></div>`;
+    }).join('');
+  }).join('');
+}
+
+/* ============ settings ============ */
+function rowsHTML(path) {
+  const list = getList(path);
+  if (!list.length) return '<div class="mute pad">آیتمی نیست</div>';
+  return list.map(i => `<div class="li${i.active === false ? ' off' : ''}" data-path="${path}" data-id="${i.id}"><input type="text" value="${esc(i.label)}" aria-label="نام آیتم">
+    <button class="sw${i.active === false ? '' : ' on'}" data-act="li-tgl" data-path="${path}" data-id="${i.id}" title="فعال یا غیرفعال" aria-label="فعال یا غیرفعال"><i></i></button>
+    <button class="icon sm" data-act="li-rm" data-path="${path}" data-id="${i.id}" aria-label="حذف">✕</button></div>`).join('');
+}
+const edHTML = (path, label) => `<div class="ed"><h4>${label}</h4><div id="ed-${path.replace('.', '-')}">${rowsHTML(path)}</div><button class="btn ghost small" data-act="li-add" data-path="${path}">＋ افزودن</button></div>`;
+function openSettings() {
+  const demoCount = S.trades.filter(t => t.demo).length;
+  const html = `
+    <div class="sheet-head"><h3>تنظیمات</h3><button class="icon" data-close aria-label="بستن">✕</button></div>
+    <div class="sheet-body">
+      <div class="stabs"><button class="on" data-tab="cl">چک‌لیست‌ها</button><button data-tab="ps">روانشناسی</button><button data-tab="data">داده‌ها</button></div>
+      <div class="pane on" id="pane-cl">${edHTML('checklists.higher', 'چک‌لیست تایم بالا')}${edHTML('checklists.analysis', 'چک‌لیست تحلیل')}${edHTML('checklists.entry', 'چک‌لیست ورود')}
+        <p class="hint" style="margin-top:12px">تغییرها خودکار ذخیره می‌شوند. آیتم غیرفعال از فرم‌ها پنهان می‌شود ولی داده قدیمی‌اش می‌ماند.</p></div>
+      <div class="pane" id="pane-ps">${edHTML('psychology.before', 'قبل از معامله')}${edHTML('psychology.during', 'هنگام ورود و حین معامله')}${edHTML('psychology.after', 'بعد از نتیجه')}</div>
+      <div class="pane" id="pane-data">
+        <div class="fld"><label for="noise">آستانه ترید کوچک (بر حسب R)</label><input id="noise" inputmode="decimal" dir="ltr" style="text-align:right" value="${S.settings.noiseThreshold}"></div>
+        <div class="dbtns">
+          <button class="btn" data-act="export">خروجی پشتیبان</button>
+          <button class="btn" data-act="import">بازیابی پشتیبان</button>
+          <button class="btn" data-act="demo">بارگذاری داده نمونه برای دیدن گزارش</button>
+          ${demoCount ? `<button class="btn" data-act="undemo">حذف داده‌های نمونه (${demoCount} ترید)</button>` : ''}
+          <button class="btn danger" data-act="reset-trades">پاک‌کردن همه تریدها</button>
+          <button class="btn danger" data-act="reset-settings">بازنشانی تنظیمات</button></div>
+        <p class="hint" style="margin-top:12px">داده‌ها داخل مرورگر همین دستگاه ذخیره می‌شوند. برای نگهداری امن یا انتقال، پشتیبان بگیر.</p></div>
+    </div>`;
+  openSheet(html, {backdrop: true});
+}
+function refreshEditor(path) { const el = $('#ed-' + path.replace('.', '-')); if (el) el.innerHTML = rowsHTML(path); }
+function exportBackup() {
+  const blob = new Blob([JSON.stringify({format: 'KidJournalV3', exportedAt: new Date().toISOString(), ...snapshot()})], {type: 'application/json'});
+  const a = document.createElement('a'), url = URL.createObjectURL(blob);
+  a.href = url; a.download = 'KidJournal_' + toKey(new Date()) + '.kj'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 1500);
+}
+async function importBackup(file) {
+  try {
+    const p = JSON.parse(await file.text());
+    if (p.format === 'KidJournalV3') S = normalize(p);
+    else if (p.format === 'KidJournalBackup' && Array.isArray(p.trades)) S = migrateOld(p);
+    else throw new Error('فایل پشتیبان معتبر نیست');
+    persist(); closeSheet(); render(); toast(`${S.trades.length} ترید بازیابی شد`);
+  } catch (e) { alert('خطا در بازیابی: ' + e.message); }
+}
+
+/* ============ demo data ============ */
+function genDemo() {
+  let a = 20260419;
+  const rng = () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+  const pick = arr => arr[Math.floor(rng() * arr.length)];
+  const wpick = pairs => { let x = rng() * pairs.reduce((s, p) => s + p[1], 0); for (const [v, w] of pairs) { if ((x -= w) <= 0) return v; } return pairs[0][0]; };
+  const ids = l => l.filter(i => i.active !== false).map(i => i.id);
+  const L = S.settings.checklists, P = S.settings.psychology;
+  const H = ids(L.higher), A = ids(L.analysis), E = ids(L.entry), PB = ids(P.before), PD = ids(P.during), PA = ids(P.after);
+  const sub = (arr, p) => arr.filter(() => rng() < p);
+  const some = (arr, p) => rng() < p ? [pick(arr)].concat(rng() < .3 ? [pick(arr)] : []).filter((v, i, s) => s.indexOf(v) === i) : [];
+  const add = (d, m) => new Date(d.getTime() + m * 60000);
+  const today = new Date(); let count = 0;
+  for (let off = 80; off >= 1; off--) {
+    const day = new Date(today.getFullYear(), today.getMonth(), today.getDate() - off);
+    if (day.getDay() === 0 || day.getDay() === 6 || rng() < .15) continue;
+    const nT = wpick([[1, 34], [2, 34], [3, 18], [4, 9], [5, 5]]);
+    let cursor = new Date(day); cursor.setHours(7 + Math.floor(rng() * 4), Math.floor(rng() * 50));
+    let prevLoss = false;
+    for (let k = 0; k < nT; k++) {
+      if (cursor.getHours() >= 22) break;
+      const dir = pick(['Buy', 'Sell']), al = wpick([['with', 60], ['counter', 25], ['neutral', 15]]);
+      const view = al === 'neutral' ? 'Neutral' : al === 'with' ? (dir === 'Buy' ? 'Bullish' : 'Bearish') : (dir === 'Buy' ? 'Bearish' : 'Bullish');
+      const sc = .3 + rng() * .7, higher = H.filter(() => rng() < sc), analysis = A.filter(() => rng() < sc);
+      const before = some(PB, .5), emo = before.some(x => ['before-fomo', 'before-haste', 'before-excitement', 'before-greed'].includes(x));
+      const p = Math.min(.8, Math.max(.1, .38 + .3 * (sc - .5) + (al === 'with' ? .1 : al === 'counter' ? -.09 : 0) - (emo ? .1 : 0) - (prevLoss && k > 0 ? .06 : 0) - (k >= 3 ? .05 : 0)));
+      const u = rng(), outcome = u < p ? 'win' : u < p + .07 ? 'be' : 'loss';
+      const ne = wpick([[1, 60], [2, 28], [3, 12]]), dur = outcome === 'win' ? 30 + rng() * 210 : 10 + rng() * 110;
+      const entries = [];
+      for (let j = 0; j < ne; j++) {
+        let R;
+        if (outcome === 'win') R = rng() < .85 ? wpick([[.5, 10], [1, 20], [1.5, 20], [2, 25], [3, 15], [4, 5]]) : 0;
+        else if (outcome === 'loss') R = rng() < .85 ? -1 : -.5; else R = 0;
+        const echecks = sub(E, sc);
+        entries.push({id: uid('e'), openedAt: fmtLocal(add(cursor, j * 5)), risk: wpick([[.5, 25], [1, 55], [1.5, 12], [2, 8]]), tf: pick(['M1', 'M5', 'M5', 'M15']),
+          checks: echecks, score: E.length ? echecks.length / E.length : null, psychDuring: some(PD, outcome === 'loss' ? .55 : .3),
+          resultR: R, closedAt: fmtLocal(add(cursor, dur)), exitReason: outcome === 'win' ? wpick([['TP', 40], ['Trail', 25], ['Early', 20], ['Manual', 15]]) : outcome === 'loss' ? wpick([['SL', 80], ['Manual', 20]]) : 'Manual',
+          psychAfter: some(PA, outcome === 'loss' ? .5 : .3)});
+      }
+      S.trades.push({id: uid('t'), symbol: wpick([['XAUUSD', 55], ['EURUSD', 15], ['GBPUSD', 10], ['USDJPY', 10], ['AUDUSD', 5], ['USDCAD', 5]]), direction: dir, higherView: view,
+        higherTF: pick(['H1', 'H4', 'H4', 'D1']), analysisTF: pick(['M15', 'M30', 'H1']), checks: {higher, analysis}, psychBefore: before, note: '', openedAt: fmtLocal(cursor),
+        score: calcScore(new Set(higher), new Set(analysis)), demo: true, createdAt: fmtLocal(cursor), entries});
+      count++;
+      const total = entries.reduce((s, e) => s + e.resultR, 0); prevLoss = total < 0;
+      cursor = add(cursor, dur + (prevLoss && rng() < .35 ? 5 + rng() * 20 : 40 + rng() * 80));
+    }
+  }
+  persist(); return count;
+}
+
+/* ============ actions ============ */
+function handleAct(act, el) {
+  const id = el.dataset.id, eid = el.dataset.eid, path = el.dataset.path;
+  switch (act) {
+    case 'new-trade': openTradeForm(); break;
+    case 'edit-trade': openTradeForm(id); break;
+    case 'add-entry': openEntryForm(id); break;
+    case 'edit-entry': openEntryForm(id, eid); break;
+    case 'rec-result': openResultForm(id, eid ? [eid] : null); break;
+    case 'view': openDetail(id); break;
+    case 'settings': openSettings(); break;
+    case 'del-trade': if (confirm('این ترید با همه ورودی‌هایش حذف شود؟')) { S.trades = S.trades.filter(t => t.id !== id); persist(); closeSheet(); render(); toast('حذف شد'); } break;
+    case 'del-entry': { const t = getTrade(id); if (t && confirm('این ورود حذف شود؟')) { t.entries = t.entries.filter(e => e.id !== eid); persist(); render(); openDetail(id); } break; }
+    case 'li-add': { const list = getList(path); list.push({id: uid('i'), label: path.startsWith('psych') ? 'حالت جدید' : 'آیتم جدید', active: true}); persist(); refreshEditor(path); const inputs = $$('#ed-' + path.replace('.', '-') + ' input'); const last = inputs[inputs.length - 1]; if (last) { last.focus(); last.select(); } break; }
+    case 'li-tgl': { const it = getList(path).find(i => i.id === id); if (it) { it.active = it.active === false; persist(); refreshEditor(path); } break; }
+    case 'li-rm': if (confirm('این آیتم حذف شود؟ (غیرفعال کردن امن‌تر است)')) { const l = getList(path), ix = l.findIndex(i => i.id === id); if (ix > -1) l.splice(ix, 1); persist(); refreshEditor(path); } break;
+    case 'export': exportBackup(); break;
+    case 'import': $('#importFile').click(); break;
+    case 'demo': { if (S.trades.some(t => t.demo) && !confirm('داده نمونه قبلی هست. دوباره اضافه شود؟')) break; const n = genDemo(); view = 'report'; closeSheet(); render(); toast(`${n} ترید نمونه اضافه شد`); break; }
+    case 'undemo': S.trades = S.trades.filter(t => !t.demo); persist(); closeSheet(); render(); toast('داده‌های نمونه حذف شدند'); break;
+    case 'reset-trades': if (confirm('همه تریدها پاک شود؟ این کار برگشت ندارد.')) { S.trades = []; persist(); closeSheet(); render(); } break;
+    case 'reset-settings': if (confirm('تنظیمات به حالت پیش‌فرض برگردد؟')) { S.settings = DEFAULTS(); persist(); openSettings(); } break;
+  }
+}
+
+function bindGlobal() {
+  document.addEventListener('click', e => {
+    const t = e.target;
+    const tab = t.closest('.tab'); if (tab) { view = tab.dataset.v; render(); window.scrollTo(0, 0); return; }
+    if (t.closest('[data-close]')) { closeSheet(); return; }
+    if (t === $('#modal') && ctx && ctx.backdrop) { closeSheet(); return; }
+    const chip = t.closest('.chips[data-group] .chip');
+    if (chip && ctx) { const on = chip.classList.toggle('on'); ctx.onChip && ctx.onChip(chip.parentElement.dataset.group, chip.dataset.id, on); return; }
+    const sc = t.closest('.chips[data-seg] .chip');
+    if (sc && ctx && ctx.onSegChip) { ctx.onSegChip(sc.parentElement.dataset.seg, sc.dataset.val, sc); return; }
+    const opt = t.closest('.seg .opt');
+    if (opt && ctx) { $$('.opt', opt.parentElement).forEach(o => o.classList.toggle('on', o === opt)); ctx.onSeg && ctx.onSeg(opt.parentElement.dataset.seg, opt.dataset.val); return; }
+    const q = t.closest('.q[data-target]');
+    if (q) { const inp = document.getElementById(q.dataset.target); if (inp) { inp.value = q.dataset.q; inp.dispatchEvent(new Event('input', {bubbles: true})); } ctx && ctx.onQuick && ctx.onQuick(q); return; }
+    const tabBtn = t.closest('.stabs button'); if (tabBtn) { $$('.stabs button').forEach(b => b.classList.toggle('on', b === tabBtn)); $$('.pane').forEach(p => p.classList.toggle('on', p.id === 'pane-' + tabBtn.dataset.tab)); return; }
+    const act = t.closest('[data-act]'); if (act && !act.disabled) handleAct(act.dataset.act, act);
+  });
+  document.addEventListener('input', e => {
+    const t = e.target;
+    if (t.matches('.li input')) { const row = t.closest('.li'), it = getList(row.dataset.path).find(i => i.id === row.dataset.id); if (it) { it.label = t.value.trim() || 'بدون نام'; persist(); } return; }
+    if (t.id === 'noise') { const v = toNum(t.value); if (v > 0) { S.settings.noiseThreshold = v; persist(); } return; }
+    ctx && ctx.onInput && ctx.onInput(t);
+  });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('#modal').classList.contains('open')) closeSheet(); });
+  $('#importFile').addEventListener('change', e => { const f = e.target.files[0]; e.target.value = ''; if (f && confirm('بازیابی، اطلاعات فعلی را جایگزین می‌کند. ادامه می‌دهی؟')) importBackup(f); });
+  window.addEventListener('resize', () => { clearTimeout(window.__rz); window.__rz = setTimeout(() => { if (view === 'report') drawEquity(); }, 150); });
+}
+
+async function boot() {
+  await Store.init();
+  const raw = await Store.load();
+  S = (raw && raw.v === 3) ? normalize(raw) : normalize(null);
+  bindGlobal(); render();
+}
+/* ============ report: math ============ */
+const MIN_N = 5;
+function summ(rs) {
+  const n = rs.length; let w = 0, l = 0, b = 0, sw = 0, sl = 0, tot = 0;
+  rs.forEach(r => { tot += r; if (r > 0) { w++; sw += r; } else if (r < 0) { l++; sl += r; } else b++; });
+  return {n, w, l, b, total: round2(tot), avg: n ? tot / n : 0, wr: n ? w / n * 100 : 0, pf: sl < 0 ? sw / -sl : (sw > 0 ? Infinity : 0), avgW: w ? sw / w : 0, avgL: l ? sl / l : 0, sw, sl};
+}
+const grp = (arr, kf, rf) => { const m = new Map(); arr.forEach(x => { const k = kf(x); if (k === null || k === undefined || k === '') return; if (!m.has(k)) m.set(k, []); m.get(k).push(rf(x)); }); return m; };
+const rowsFrom = (m, labelFn, order) => { const a = [...m.entries()].map(([k, rs]) => ({k, label: labelFn(k), rs})); if (order) a.sort(order); return a; };
+const byKey = (a, b) => a.k < b.k ? -1 : a.k > b.k ? 1 : 0;
+const byTotalDesc = (a, b) => summ(b.rs).total - summ(a.rs).total;
+const ALIGN = {with: 'هم‌جهت با تایم بالا', counter: 'خلاف تایم بالا', none: 'بدون دیدگاه (خنثی یا ثبت‌نشده)'};
+const alignOf = t => {
+  if (!t.higherView || t.higherView === 'Neutral') return 'none';
+  return (t.direction === 'Buy' && t.higherView === 'Bullish') || (t.direction === 'Sell' && t.higherView === 'Bearish') ? 'with' : 'counter';
+};
+const scoreBin = s => s === null || s === undefined ? null : s >= .8 ? '1' : s >= .5 ? '2' : '3';
+const BIN = {'1': '۸۰٪ به بالا', '2': '۵۰ تا ۷۹٪', '3': 'زیر ۵۰٪'};
+const tradeDur = t => { const st = t.entries.reduce((m, e) => !m || e.openedAt < m ? e.openedAt : m, ''); const m = (parseT(closeTime(t)) - parseT(st || t.openedAt)) / 60000; return m >= 0 && isFinite(m) ? m : null; };
+
+/* ============ report: filters ============ */
+const RF = {period: 'all', sym: '', hideSmall: false};
+let lastList = [];
+function reportList() {
+  let list = S.trades.filter(isClosed);
+  if (RF.sym) list = list.filter(t => t.symbol === RF.sym);
+  if (RF.period !== 'all') { const c = new Date(); c.setDate(c.getDate() - Number(RF.period)); const k = toKey(c); list = list.filter(t => t.openedAt.slice(0, 10) >= k); }
+  if (RF.hideSmall) list = list.filter(t => !isSmall(t));
+  return list.sort((a, b) => closeTime(a).localeCompare(closeTime(b)));
+}
+function reportShell() {
+  const syms = [...new Set(S.trades.map(t => t.symbol))].sort();
+  const per = [['all', 'کل دوره'], ['7', '۷ روز اخیر'], ['30', '۳۰ روز اخیر'], ['90', '۹۰ روز اخیر']];
+  return `<div class="rfilters">
+    <select id="rper">${per.map(([v, l]) => `<option value="${v}"${RF.period === v ? ' selected' : ''}>${l}</option>`).join('')}</select>
+    <select id="rsym"><option value="">همه نمادها</option>${syms.map(s => `<option${RF.sym === s ? ' selected' : ''}>${esc(s)}</option>`).join('')}</select>
+    <button class="btn ghost" id="rsmall"></button></div><div id="rep"></div>`;
+}
+function bindReport() {
+  $('#rper').onchange = e => { RF.period = e.target.value; renderReport(); };
+  $('#rsym').onchange = e => { RF.sym = e.target.value; renderReport(); };
+  $('#rsmall').onclick = () => { RF.hideSmall = !RF.hideSmall; renderReport(); };
+}
+function renderReport() {
+  const b = $('#rsmall'); if (b) b.textContent = RF.hideSmall ? `تریدهای کوچک پنهان است (کمتر از ${S.settings.noiseThreshold}R)` : 'پنهان‌کردن تریدهای کوچک';
+  const list = reportList(); lastList = list;
+  const openN = S.trades.filter(t => !isClosed(t)).length;
+  $('#rep').innerHTML = reportBody(list, openN);
+  drawEquity();
+}
+
+/* ============ report: building blocks ============ */
+function bars(rows) {
+  if (!rows.length) return '<div class="mute pad">داده‌ای نیست</div>';
+  const st = rows.map(r => ({...r, ...summ(r.rs)})), max = Math.max(...st.map(s => Math.abs(s.total)), 0.01);
+  return '<div class="bd">' + st.map(s => `<div class="bd-row${s.n < MIN_N ? ' low' : ''}"${s.n < MIN_N ? ' title="نمونه کم است؛ با احتیاط تفسیر کن"' : ''}>
+    <span class="bd-l">${s.label}</span><span class="bd-bar"><i class="${s.total >= 0 ? 'p' : 'n'}" style="width:${Math.max(2, Math.abs(s.total) / max * 100)}%"></i></span>
+    <span class="bd-v">${N(fmtR(s.total), s.total)}</span>
+    <span class="bd-m"><span>${s.n} ترید</span><span>${Math.round(s.wr)}٪ برد</span><span>میانگین ${N(fmtR(s.avg), s.avg)}</span></span></div>`).join('') + '</div>';
+}
+const sec = (title, hint, body, open = true) => `<details class="sec"${open ? ' open' : ''}><summary>${title}</summary>${hint ? `<p class="hint">${hint}</p>` : ''}${body}</details>`;
+const kpi = (label, val, main) => `<div class="kpi${main ? ' main' : ''}"><small>${label}</small><b>${val}</b></div>`;
+
+function kpis(list) {
+  const rs = list.map(tR), s = summ(rs), pct = round2(list.reduce((a, t) => a + tPct(t), 0));
+  let eq = 0, peak = 0, dd = 0;
+  rs.forEach(r => { eq += r; peak = Math.max(peak, eq); dd = Math.max(dd, peak - eq); });
+  let cw = 0, cl = 0, mw = 0, ml = 0, cur = 0;
+  rs.forEach(r => { if (r > 0) { cw++; cl = 0; mw = Math.max(mw, cw); cur = cw; } else if (r < 0) { cl++; cw = 0; ml = Math.max(ml, cl); cur = -cl; } });
+  const entries = list.reduce((a, t) => a + t.entries.length, 0);
+  return {s, pct, dd, curDD: peak - eq, mw, ml, cur, best: Math.max(...rs), worst: Math.min(...rs), entries, total: eq};
+}
+function kpiHTML(K) {
+  const s = K.s, pf = s.pf === Infinity ? '∞' : s.pf.toFixed(2), payoff = s.avgL < 0 ? (s.avgW / -s.avgL).toFixed(2) : '—';
+  const cur = K.cur > 0 ? `${K.cur} برد` : K.cur < 0 ? `${-K.cur} باخت` : '—';
+  return '<div class="kpis">' +
+    kpi('مجموع R', N(fmtR(K.total), K.total), true) + kpi('امید ریاضی (میانگین R)', N(fmtR(s.avg), s.avg), true) +
+    kpi('درصد برد', Math.round(s.wr) + '٪', true) + kpi('ضریب سود', `<span class="num" dir="ltr">${pf}</span>`, true) +
+    kpi('تعداد تریدها', `${s.n}`) + kpi('مجموع درصد حساب', N(fmtP(K.pct), K.pct)) +
+    kpi('میانگین سود', N(fmtR(s.avgW), s.avgW)) + kpi('میانگین ضرر', N(fmtR(s.avgL), s.avgL)) +
+    kpi('نسبت سود به ضرر واقعی', `<span class="num" dir="ltr">${payoff}</span>`) + kpi('حداکثر افت', N('-' + round2(K.dd).toFixed(2) + 'R', -1)) +
+    kpi('افت فعلی از سقف', K.curDD > 0 ? N('-' + round2(K.curDD).toFixed(2) + 'R', -1) : 'روی سقف') + kpi('استریک فعلی', cur) +
+    kpi('بهترین ترید', N(fmtR(K.best), K.best)) + kpi('بدترین ترید', N(fmtR(K.worst), K.worst)) +
+    kpi('بیشترین برد پشت‌سرهم', `${K.mw}`) + kpi('بیشترین باخت پشت‌سرهم', `${K.ml}`) + '</div>';
+}
+
+/* ============ report: equity chart ============ */
+function drawEquity() {
+  const cv = $('#eq'); if (!cv) return;
+  const list = lastList, box = cv.parentElement, W = box.clientWidth, H = box.clientHeight, dpr = window.devicePixelRatio || 1;
+  cv.width = W * dpr; cv.height = H * dpr;
+  const g = cv.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, W, H);
+  const pts = [0]; let eq = 0; list.forEach(t => { eq += tR(t); pts.push(round2(eq)); });
+  const peaks = []; let pk = 0; pts.forEach(v => { pk = Math.max(pk, v); peaks.push(pk); });
+  const n = pts.length - 1, lo = Math.min(0, ...pts), hi = Math.max(0, ...peaks), span = (hi - lo) || 1;
+  const P = {l: 46, r: 14, t: 14, b: 24}, pw = W - P.l - P.r, ph = H - P.t - P.b;
+  const X = i => P.l + (n === 0 ? pw / 2 : i * pw / n), Y = v => P.t + (hi + span * .06 - v) * ph / (span * 1.12);
+  g.font = '11px sans-serif'; g.textBaseline = 'middle'; g.textAlign = 'right';
+  for (let k = 0; k <= 4; k++) { const v = lo + span * k / 4, y = Y(v); g.strokeStyle = '#222a34'; g.lineWidth = 1; g.beginPath(); g.moveTo(P.l, y); g.lineTo(W - P.r, y); g.stroke(); g.fillStyle = '#8d97a5'; g.fillText(v.toFixed(1), P.l - 6, y); }
+  g.setLineDash([4, 4]); g.strokeStyle = '#4a5563'; g.beginPath(); g.moveTo(P.l, Y(0)); g.lineTo(W - P.r, Y(0)); g.stroke(); g.setLineDash([]);
+  g.beginPath(); pts.forEach((v, i) => i ? g.lineTo(X(i), Y(peaks[i])) : g.moveTo(X(i), Y(peaks[i])));
+  for (let i = n; i >= 0; i--) g.lineTo(X(i), Y(pts[i]));
+  g.closePath(); g.fillStyle = 'rgba(240,112,122,.16)'; g.fill();
+  g.beginPath(); pts.forEach((v, i) => i ? g.lineTo(X(i), Y(v)) : g.moveTo(X(i), Y(v)));
+  g.strokeStyle = '#a8c7fa'; g.lineWidth = 2.2; g.lineJoin = 'round'; g.stroke();
+  g.fillStyle = '#a8c7fa'; g.beginPath(); g.arc(X(n), Y(pts[n]), 4, 0, 7); g.fill();
+  g.fillStyle = '#8d97a5'; g.textAlign = 'center'; g.textBaseline = 'alphabetic'; g.fillText('۰', P.l, H - 6); g.fillText(String(n), W - P.r, H - 6);
+  const tip = $('#tip'), xh = $('#xh');
+  cv.onpointermove = e => {
+    const r = cv.getBoundingClientRect(), x = e.clientX - r.left, i = Math.max(0, Math.min(n, Math.round((x - P.l) / pw * n)));
+    const t = i ? list[i - 1] : null, px = X(i);
+    tip.innerHTML = i ? `ترید ${i} ${esc(t.symbol)} ${N(fmtR(tR(t)), tR(t))} مجموع ${N(fmtR(pts[i]), pts[i])}` : 'شروع';
+    tip.style.display = 'block'; xh.style.display = 'block'; xh.style.left = px + 'px';
+    tip.style.left = Math.max(4, Math.min(W - tip.offsetWidth - 4, px - tip.offsetWidth / 2)) + 'px';
+  };
+  cv.onpointerleave = () => { tip.style.display = 'none'; xh.style.display = 'none'; };
+}
+
+/* ============ report: heat calendar ============ */
+function heatHTML(list) {
+  const by = new Map(); list.forEach(t => { const k = t.openedAt.slice(0, 10), o = by.get(k) || {r: 0, n: 0}; o.r += tR(t); o.n++; by.set(k, o); });
+  const max = Math.max(0.01, ...[...by.values()].map(o => Math.abs(o.r)));
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const start = new Date(today); start.setDate(start.getDate() - (11 * 7 + persianWd(today)));
+  let cells = '';
+  for (let i = 0; i < 84; i++) {
+    const d = new Date(start); d.setDate(start.getDate() + i);
+    if (d > today) { cells += '<span class="hc fut"></span>'; continue; }
+    const k = toKey(d), o = by.get(k);
+    if (!o) { cells += `<span class="hc" title="${faDay(k)}"></span>`; continue; }
+    const a = (.22 + .78 * Math.min(1, Math.abs(o.r) / max)).toFixed(2), col = o.r > 0 ? '69,200,163' : o.r < 0 ? '240,112,122' : '154,164,178';
+    cells += `<span class="hc" style="background:rgba(${col},${a})" title="${faDay(k)}: ${fmtR(round2(o.r))} (${o.n} ترید)"></span>`;
+  }
+  return `<div class="heatwrap"><div class="heatl">${['ش', 'ی', 'د', 'س', 'چ', 'پ', 'ج'].map(x => `<span>${x}</span>`).join('')}</div><div class="heat">${cells}</div></div>`;
+}
+
+/* ============ report: insights ============ */
+function insights(list, ents) {
+  const out = [], push = (t, html) => out.push({t, html});
+  const rsT = t => tR(t);
+  const bySym = rowsFrom(grp(list, t => t.symbol, rsT), esc).map(r => ({...r, ...summ(r.rs)})).filter(r => r.n >= MIN_N);
+  if (bySym.length >= 2) {
+    const b = bySym.reduce((x, y) => y.avg > x.avg ? y : x), w = bySym.reduce((x, y) => y.avg < x.avg ? y : x);
+    if (b.avg > 0) push('good', `بهترین نمادت ${b.label} است: میانگین ${N(fmtR(b.avg), b.avg)} در ${b.n} ترید.`);
+    if (w.avg < 0 && w.k !== b.k) push('bad', `نماد ${w.label} برایت ضرر داده: میانگین ${N(fmtR(w.avg), w.avg)} در ${w.n} ترید.`);
+  }
+  const byWd = rowsFrom(grp(list, t => persianWd(parseT(t.openedAt)), rsT), k => WEEK[k]).map(r => ({...r, ...summ(r.rs)})).filter(r => r.n >= MIN_N);
+  if (byWd.length >= 2) {
+    const b = byWd.reduce((x, y) => y.avg > x.avg ? y : x), w = byWd.reduce((x, y) => y.avg < x.avg ? y : x);
+    if (b.avg > 0) push('good', `بهترین روز هفته ${b.label} است (میانگین ${N(fmtR(b.avg), b.avg)}).`);
+    if (w.avg < 0 && w.k !== b.k) push('bad', `ضعیف‌ترین روز ${w.label} است (میانگین ${N(fmtR(w.avg), w.avg)}).`);
+  }
+  const al = grp(list, alignOf, rsT), aw = al.get('with'), ac = al.get('counter');
+  if (aw && ac && aw.length >= MIN_N && ac.length >= MIN_N) {
+    const a = summ(aw), c = summ(ac);
+    push(a.avg >= c.avg ? 'good' : 'bad', a.avg >= c.avg
+      ? `تریدهای هم‌جهت با تایم بالا میانگین ${N(fmtR(a.avg), a.avg)} دارند و خلاف‌جهت‌ها ${N(fmtR(c.avg), c.avg)}. هم‌جهت ماندن می‌ارزد.`
+      : `تریدهای خلاف تایم بالا بهتر از هم‌جهت‌ها جواب داده‌اند (${N(fmtR(c.avg), c.avg)} در برابر ${N(fmtR(a.avg), a.avg)}). تعریف «دیدگاه تایم بالا» را بازبینی کن.`);
+  }
+  const hi = list.filter(t => t.score >= .8).map(rsT), lo = list.filter(t => t.score !== null && t.score < .6).map(rsT);
+  if (hi.length >= MIN_N && lo.length >= MIN_N) {
+    const a = summ(hi), b = summ(lo);
+    push(a.avg > b.avg ? 'good' : 'info', `وقتی چک‌لیست را ۸۰٪ به بالا پر کرده‌ای میانگین ${N(fmtR(a.avg), a.avg)}، و زیر ۶۰٪ میانگین ${N(fmtR(b.avg), b.avg)}.`);
+  }
+  const L = labelMap(), costs = [];
+  [['before', 'قبل از معامله', t => t.psychBefore, list.map(t => ({ids: t.psychBefore, r: tR(t)}))],
+   ['during', 'هنگام ورود', null, ents.map(({e}) => ({ids: e.psychDuring, r: e.resultR}))],
+   ['after', 'بعد از نتیجه', null, ents.map(({e}) => ({ids: e.psychAfter, r: e.resultR}))]].forEach(([, ph, , units]) => {
+    const m = new Map(); units.forEach(u => u.ids.forEach(id => { if (!m.has(id)) m.set(id, []); m.get(id).push(u.r); }));
+    m.forEach((rs, id) => { if (rs.length >= 3) costs.push({label: L[id] || 'آیتم حذف‌شده', ph, ...summ(rs)}); });
+  });
+  if (costs.length) { const w = costs.reduce((x, y) => y.total < x.total ? y : x); if (w.total < 0) push('bad', `پرهزینه‌ترین حالت ذهنی: «${esc(w.label)}» (${w.ph}) تا حالا ${N(fmtR(w.total), w.total)} خرج داشته، در ${w.n} بار.`); }
+  const seq = list.slice().sort((a, b) => a.openedAt.localeCompare(b.openedAt)), afterLoss = [];
+  seq.forEach((t, i) => { if (i && tR(seq[i - 1]) < 0) afterLoss.push(tR(t)); });
+  if (afterLoss.length >= MIN_N) {
+    const a = summ(afterLoss), all = summ(list.map(rsT));
+    if (a.wr <= all.wr - 10) push('bad', `بعد از باخت، درصد بردت ${Math.round(a.wr)}٪ است در برابر ${Math.round(all.wr)}٪ کلی. بعد از ضرر کمی صبر کن.`);
+    else if (a.wr >= all.wr + 10) push('good', `بعد از باخت خوب برمی‌گردی: ${Math.round(a.wr)}٪ برد در برابر ${Math.round(all.wr)}٪ کلی.`);
+  }
+  const perDay = new Map(); seq.forEach(t => { const k = t.openedAt.slice(0, 10); perDay.set(k, (perDay.get(k) || 0) + 1); });
+  const many = seq.filter(t => perDay.get(t.openedAt.slice(0, 10)) >= 4).map(rsT), few = seq.filter(t => perDay.get(t.openedAt.slice(0, 10)) <= 2).map(rsT);
+  if (many.length >= MIN_N && few.length >= MIN_N) {
+    const a = summ(many), b = summ(few);
+    if (a.avg < b.avg - 0.1) push('bad', `در روزهایی که ۴ ترید یا بیشتر زده‌ای میانگین ${N(fmtR(a.avg), a.avg)} است، در روزهای ۱ یا ۲ تریدی ${N(fmtR(b.avg), b.avg)}. پرمعامله‌گی هزینه دارد.`);
+  }
+  const dw = list.filter(t => tR(t) > 0).map(tradeDur).filter(x => x !== null), dl = list.filter(t => tR(t) < 0).map(tradeDur).filter(x => x !== null);
+  if (dw.length >= MIN_N && dl.length >= MIN_N) {
+    const aw = dw.reduce((a, b) => a + b, 0) / dw.length, al2 = dl.reduce((a, b) => a + b, 0) / dl.length;
+    if (al2 > aw * 1.3) push('bad', `ضررها را به‌طور میانگین ${fmtDur(al2)} نگه می‌داری و سودها را ${fmtDur(aw)}. ضرر را دیر می‌بندی.`);
+    else if (aw < al2 * .6) push('bad', `سودها را زود می‌بندی: ${fmtDur(aw)} در برابر ${fmtDur(al2)} برای ضررها.`);
+  }
+  return out;
+}
+
+/* ============ report: tables ============ */
+function itemTable(listKey, level, list, ents) {
+  const units = level === 'trade' ? list.map(t => ({ids: new Set(t.checks[listKey]), r: tR(t)})) : ents.map(({e}) => ({ids: new Set(e.checks), r: e.resultR}));
+  if (!units.length) return '';
+  const rows = S.settings.checklists[listKey].map(it => {
+    const w = units.filter(u => u.ids.has(it.id)), wo = units.filter(u => !u.ids.has(it.id));
+    return {it, n: w.length, use: w.length / units.length * 100, wrW: w.length ? w.filter(u => u.r > 0).length / w.length * 100 : null, wrWo: wo.length ? wo.filter(u => u.r > 0).length / wo.length * 100 : null};
+  }).filter(r => r.it.active !== false || r.n);
+  return `<div class="tblw"><table class="tbl"><thead><tr><th>آیتم</th><th>استفاده</th><th>برد با آن</th><th>برد بدون آن</th></tr></thead><tbody>` +
+    rows.map(r => `<tr class="${r.n < MIN_N ? 'low' : ''}"><td>${esc(r.it.label)}</td><td>${N(Math.round(r.use) + '٪')} <span class="mute">(${r.n} از ${units.length})</span></td>
+      <td>${r.wrW === null ? '—' : N(Math.round(r.wrW) + '٪')}</td><td>${r.wrWo === null ? '—' : N(Math.round(r.wrWo) + '٪')}</td></tr>`).join('') + '</tbody></table></div>';
+}
+function psychTable(phase, list, ents) {
+  const units = phase === 'before' ? list.map(t => ({ids: t.psychBefore, r: tR(t)})) : ents.map(({e}) => ({ids: phase === 'during' ? e.psychDuring : e.psychAfter, r: e.resultR}));
+  if (!units.length) return '';
+  const L = labelMap(), m = new Map(), none = [];
+  units.forEach(u => { if (!u.ids.length) none.push(u.r); u.ids.forEach(id => { if (!m.has(id)) m.set(id, []); m.get(id).push(u.r); }); });
+  const rows = [...m.entries()].map(([id, rs]) => ({label: esc(L[id] || 'آیتم حذف‌شده'), ...summ(rs)})).sort((a, b) => a.total - b.total);
+  const base = none.length ? {label: 'بدون هیچ حالتی (مبنا)', cls: 'base', ...summ(none)} : null;
+  const tr = r => `<tr class="${r.cls || ''}${r.n < MIN_N ? ' low' : ''}"><td>${r.label}</td><td>${r.n}</td><td>${Math.round(r.wr)}٪</td><td>${N(fmtR(r.total), r.total)}</td><td>${N(fmtR(r.avg), r.avg)}</td></tr>`;
+  if (!rows.length) return '<div class="mute pad">هنوز حالتی ثبت نشده</div>';
+  return `<div class="tblw"><table class="tbl"><thead><tr><th>حالت</th><th>تعداد</th><th>درصد برد</th><th>مجموع R</th><th>میانگین R</th></tr></thead><tbody>${rows.map(tr).join('')}${base ? tr(base) : ''}</tbody></table></div>`;
+}
+
+/* ============ report: body ============ */
+function reportBody(list, openN) {
+  if (!list.length) {
+    const any = S.trades.some(isClosed);
+    return `<div class="empty">${any ? 'با این فیلتر ترید بسته‌شده‌ای نیست.' : 'هنوز ترید بسته‌شده‌ای ندارم که گزارش بسازم.'}${openN ? `<br>(${openN} ترید هنوز باز است و بعد از ثبت نتیجه وارد گزارش می‌شود.)` : ''}
+      ${any ? '' : '<br><button class="btn primary" data-act="demo">با داده نمونه ببین گزارش چه شکلی است</button>'}</div>`;
+  }
+  const K = kpis(list), ents = list.flatMap(t => t.entries.map(e => ({t, e}))), rsT = t => tR(t), rsE = x => x.e.resultR;
+  const wdRows = rowsFrom(grp(list, t => persianWd(parseT(t.openedAt)), rsT), k => WEEK[k], byKey);
+  const hrRows = rowsFrom(grp(list, t => parseT(t.openedAt).getHours(), rsT), h => `${pad(h)}:00`, byKey);
+  const moRows = rowsFrom(grp(list, t => t.openedAt.slice(0, 7), rsT), k => faMonth(k + '-01'), byKey);
+  const symRows = rowsFrom(grp(list, t => t.symbol, rsT), esc, byTotalDesc);
+  const dirRows = rowsFrom(grp(list, t => t.direction, rsT), k => DIR[k] || k, byKey);
+  const alRows = rowsFrom(grp(list, alignOf, rsT), k => ALIGN[k], (a, b) => ['with', 'counter', 'none'].indexOf(a.k) - ['with', 'counter', 'none'].indexOf(b.k));
+  const htfRows = rowsFrom(grp(list, t => t.higherTF, rsT), esc, (a, b) => HTF.indexOf(a.k) - HTF.indexOf(b.k));
+  const atfRows = rowsFrom(grp(list, t => t.analysisTF, rsT), esc, (a, b) => ATF.indexOf(a.k) - ATF.indexOf(b.k));
+  const etfRows = rowsFrom(grp(ents, x => x.e.tf, rsE), esc, (a, b) => ETF.indexOf(a.k) - ETF.indexOf(b.k));
+  const exRows = rowsFrom(grp(ents, x => x.e.exitReason || 'none', rsE), k => k === 'none' ? 'نامشخص' : (EXIT[k] || esc(k)), byTotalDesc);
+  const neRows = rowsFrom(grp(list, t => Math.min(t.entries.length, 3), rsT), k => k === 3 ? '۳ ورود یا بیشتر' : `${k} ورود`, byKey);
+  const rkRows = rowsFrom(grp(ents, x => x.e.risk <= .5 ? 1 : x.e.risk <= 1 ? 2 : 3, rsE), k => ({1: 'ریسک تا ۰٫۵٪', 2: 'ریسک بیش از ۰٫۵ تا ۱٪', 3: 'ریسک بیش از ۱٪'})[k], byKey);
+  const sbRows = rowsFrom(grp(list, t => scoreBin(t.score), rsT), k => 'چک‌لیست پر ' + BIN[k], byKey);
+
+  const seq = list.slice().sort((a, b) => a.openedAt.localeCompare(b.openedAt));
+  const afterW = [], afterL = [], quick = [], other = [], perDay = new Map();
+  seq.forEach(t => { const k = t.openedAt.slice(0, 10); perDay.set(k, (perDay.get(k) || 0) + 1); });
+  seq.forEach((t, i) => {
+    const r = tR(t); if (!i) { other.push(r); return; }
+    const p = seq[i - 1], pr = tR(p);
+    if (pr < 0) afterL.push(r); else if (pr > 0) afterW.push(r);
+    const gap = (parseT(t.openedAt) - parseT(closeTime(p))) / 60000;
+    if (pr < 0 && gap >= 0 && gap <= 30) quick.push(r); else other.push(r);
+  });
+  const dayRows = rowsFrom(grp(seq, t => Math.min(perDay.get(t.openedAt.slice(0, 10)), 4), rsT), k => k === 4 ? 'روز با ۴ ترید یا بیشتر' : `روز با ${k} ترید`, byKey);
+  const durW = list.filter(t => tR(t) > 0).map(tradeDur).filter(x => x !== null), durL = list.filter(t => tR(t) < 0).map(tradeDur).filter(x => x !== null);
+  const avg = a => a.length ? a.reduce((x, y) => x + y, 0) / a.length : null;
+  const ins = insights(list, ents);
+  const topRow = t => `<div class="row" data-act="view" data-id="${t.id}"><span class="rb ${cls(tR(t))}"></span><b class="sym">${esc(t.symbol)}</b><span class="dir ${t.direction === 'Buy' ? 'buy' : 'sell'}">${DIR[t.direction]}</span><span class="grow"></span><span class="meta">${faDay(t.openedAt.slice(0, 10))}</span><span class="rv">${N(fmtR(tR(t)), tR(t))}</span></div>`;
+  const sorted = list.slice().sort((a, b) => tR(b) - tR(a));
+
+  return `${openN ? `<p class="hint">${openN} ترید هنوز باز است و در گزارش حساب نشده.</p>` : ''}
+    ${kpiHTML(K)}
+    <h3>منحنی سرمایه (به R)</h3><p class="hint">ناحیه قرمز فاصله از آخرین سقف است. هر نقطه یک ترید بسته‌شده.</p>
+    <div class="chartbox"><canvas id="eq" dir="ltr"></canvas><div class="xh" id="xh"></div><div class="tip" id="tip"></div></div>
+    <div class="secs">${sec('نکته‌های خودکار', `فقط از گروه‌هایی که حداقل ${MIN_N} ترید دارند ساخته می‌شود.`, ins.length ? `<ul class="ins">${ins.map(i => `<li class="${i.t}">${i.html}</li>`).join('')}</ul>` : '<div class="mute pad">هنوز داده کافی برای نتیجه‌گیری نیست. با ثبت تریدهای بیشتر این بخش پر می‌شود.</div>')}
+    ${sec('تقویم روزانه', '۱۲ هفته اخیر. رنگ سبز یعنی روز سودده و قرمز یعنی روز ضررده. روی هر خانه نگه دار تا جزئیات را ببینی.', heatHTML(list))}
+    ${sec('زمان', 'کی بهتر معامله می‌کنی؟ زمان بر اساس لحظه باز شدن ترید است.', `<h4>روز هفته</h4>${bars(wdRows)}<h4>ساعت روز</h4>${bars(hrRows)}<h4>ماه</h4>${bars(moRows)}`)}
+    ${sec('ستاپ و بازار', 'مجموع R هر گروه. ردیف کم‌رنگ یعنی نمونه کمتر از ' + MIN_N + ' است.', `<h4>نماد</h4>${bars(symRows)}<h4>جهت معامله</h4>${bars(dirRows)}<h4>هم‌جهتی با تایم بالا</h4>${bars(alRows)}
+      <h4>تایم‌فریم بالا</h4>${bars(htfRows)}<h4>تایم‌فریم تحلیل</h4>${bars(atfRows)}<h4>تایم‌فریم ورود (هر ورود)</h4>${bars(etfRows)}
+      <h4>تعداد ورود در هر ترید</h4>${bars(neRows)}<h4>اندازه ریسک (هر ورود)</h4>${bars(rkRows)}<h4>دلیل خروج (هر ورود)</h4>${bars(exRows)}`)}
+    ${sec('پایبندی به چک‌لیست', 'آیا پر کردن چک‌لیست واقعاً به نتیجه می‌رسد؟ در جدول‌ها فقط درصد برد آمده، نه R.', `<h4>نتیجه بر اساس درصد پرشدن چک‌لیست (تایم بالا و تحلیل)</h4>${bars(sbRows)}
+      <h4>چک‌لیست تایم بالا (مبنا: تریدها)</h4>${itemTable('higher', 'trade', list, ents)}<h4>چک‌لیست تحلیل (مبنا: تریدها)</h4>${itemTable('analysis', 'trade', list, ents)}<h4>چک‌لیست ورود (مبنا: ورودی‌ها)</h4>${itemTable('entry', 'entry', list, ents)}`)}
+    ${sec('روانشناسی', 'هر حالت ذهنی چقدر برایت هزینه یا سود داشته. مرتب‌شده از پرهزینه‌ترین.', `<h4>قبل از معامله (مبنا: تریدها)</h4>${psychTable('before', list, ents)}<h4>هنگام ورود (مبنا: ورودی‌ها)</h4>${psychTable('during', list, ents)}<h4>بعد از نتیجه (مبنا: ورودی‌ها)</h4>${psychTable('after', list, ents)}`)}
+    ${sec('رفتار', 'الگوهای انضباطی: بعد از باخت، پرمعامله‌گی و مدت نگه‌داشتن.', `<h4>ترید بعد از برد یا باخت</h4>${bars([{label: 'بعد از یک باخت', rs: afterL}, {label: 'بعد از یک برد', rs: afterW}].filter(r => r.rs.length))}
+      <h4>ورود فوری بعد از باخت</h4>${bars([{label: 'ترید در ۳۰ دقیقه بعد از باخت', rs: quick}, {label: 'بقیه تریدها', rs: other}].filter(r => r.rs.length))}
+      <h4>تعداد ترید در روز</h4>${bars(dayRows)}
+      <h4>مدت نگه‌داشتن ترید</h4><div class="pair"><div><small>میانگین سودها</small><b>${durW.length ? fmtDur(avg(durW)) : '—'}</b></div><div><small>میانگین ضررها</small><b>${durL.length ? fmtDur(avg(durL)) : '—'}</b></div></div>`)}
+    ${sec('بهترین و بدترین تریدها', '', `<div class="two-col"><div><h4>۵ ترید برتر</h4>${sorted.slice(0, 5).map(topRow).join('')}</div><div><h4>۵ ترید ضعیف</h4>${sorted.slice(-5).reverse().map(topRow).join('')}</div></div>`)}</div>`;
+}
+boot().catch(err=>{console.error(err);alert('خطا در راه‌اندازی: '+err.message);});
+})();
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('service-worker.js').catch(function (e) {
+      console.warn('Service worker registration failed:', e);
+    });
+  });
+}
+</script>
+</body></html>
